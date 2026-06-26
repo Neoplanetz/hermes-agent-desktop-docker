@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       sudo curl wget ca-certificates net-tools iproute2 lsof procps \
       x11-utils xauth \
       fonts-noto-cjk fonts-noto-color-emoji \
+      at-spi2-core gir1.2-atspi-2.0 python3-gi \
+      mousepad xdotool \
     && ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN userdel -r ubuntu 2>/dev/null || true \
