@@ -20,6 +20,20 @@ RUN userdel -r ubuntu 2>/dev/null || true \
     && adduser hermes sudo \
     && echo 'hermes ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/hermes \
     && chmod 0440 /etc/sudoers.d/hermes
+# Hermes runtime deps (installer declines these under --non-interactive)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      git ripgrep ffmpeg \
+      build-essential python3-dev pkg-config libffi-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Hermes Agent — root FHS install (/usr/local/bin/hermes), pinned, non-interactive.
+ARG HERMES_BRANCH=main
+ENV HERMES_HOME=/root/.hermes
+RUN curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- \
+      --non-interactive --skip-setup --skip-browser --no-skills \
+      --branch "${HERMES_BRANCH}" \
+    && /usr/local/bin/hermes --version
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 EXPOSE 6080 5901
