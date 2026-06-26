@@ -17,7 +17,9 @@ cat > /home/$USER/.vnc/xstartup <<'EOF'
 unset SESSION_MANAGER DBUS_SESSION_BUS_ADDRESS
 [ -f "$HOME/.xprofile" ] && . "$HOME/.xprofile"
 exec dbus-launch --exit-with-session sh -c '
-  /usr/libexec/at-spi-bus-launcher --launch-immediately &
+  ATSPI=$(command -v at-spi-bus-launcher || echo /usr/libexec/at-spi-bus-launcher)
+  "$ATSPI" --launch-immediately &
+  sleep 0.5
   exec startxfce4
 '
 EOF
