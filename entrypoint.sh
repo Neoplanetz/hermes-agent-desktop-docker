@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 USER=hermes
 PASSWORD=hermes123
 VNC_RESOLUTION="${VNC_RESOLUTION:-1920x1080}"
