@@ -45,6 +45,10 @@ RUN wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-
     && chmod +x /usr/bin/google-chrome-stable \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Home template seeded onto the (volume-shadowed) home on first boot
+RUN mkdir -p /opt/hermes-defaults/.vnc /opt/hermes-defaults/Desktop \
+    && cp /home/hermes/.bashrc /opt/hermes-defaults/ 2>/dev/null || true
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 EXPOSE 6080 5901 9222

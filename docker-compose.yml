@@ -9,6 +9,12 @@ services:
     ports:
       - "127.0.0.1:6080:6080"
       - "127.0.0.1:5901:5901"
+    volumes:
+      - hermes-home:/home/${HERMES_USER:-hermes}
     shm_size: "2gb"
     security_opt: [ "seccomp=unconfined" ]
     restart: unless-stopped
+
+volumes:
+  hermes-home:
+    name: hermes-home

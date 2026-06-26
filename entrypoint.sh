@@ -33,6 +33,16 @@ fi
 # Always sync password (handles password-only changes without rebuild)
 echo "$USER:$PASSWORD" | chpasswd
 
+# ── First-boot home seed (volume-shadow fix) ──
+# A fresh named volume mounts empty over /home/$USER, shadowing image content.
+# Seed from the build-time template only when the home looks empty.
+if [ -d /opt/hermes-defaults ] && [ ! -e "/home/$USER/.seeded" ]; then
+    cp -an /opt/hermes-defaults/. "/home/$USER/" 2>/dev/null || true
+    cp -an /etc/skel/. "/home/$USER/" 2>/dev/null || true
+    : > "/home/$USER/.seeded"
+fi
+chown -R "$USER:$USER" "/home/$USER"
+
 # VNC password
 mkdir -p /home/$USER/.vnc
 echo "$PASSWORD" | vncpasswd -f > /home/$USER/.vnc/passwd
