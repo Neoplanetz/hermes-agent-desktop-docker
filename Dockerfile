@@ -34,7 +34,16 @@ RUN curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- \
       --branch "${HERMES_BRANCH}" \
     && /usr/local/bin/hermes --version
 
+# Google Chrome (amd64) with --no-sandbox wrapper for CDP/computer-use
+RUN wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && (apt-get update && apt-get install -y /tmp/chrome.deb || (apt-get -f install -y && apt-get install -y /tmp/chrome.deb)) \
+    && rm -f /tmp/chrome.deb \
+    && mv /usr/bin/google-chrome-stable /usr/bin/google-chrome-stable-real \
+    && printf '#!/bin/bash\nexec /usr/bin/google-chrome-stable-real --no-sandbox "$@"\n' > /usr/bin/google-chrome-stable \
+    && chmod +x /usr/bin/google-chrome-stable \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-EXPOSE 6080 5901
+EXPOSE 6080 5901 9222
 ENTRYPOINT ["/entrypoint.sh"]
