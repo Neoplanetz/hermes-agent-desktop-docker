@@ -44,6 +44,30 @@ sleep 3
 # Turn on toolkit accessibility in xfconf settings (|| true — xfconfd may not be ready yet)
 su - "$USER" -c "DISPLAY=:1 xfconf-query -c xsettings -p /Net/EnableAccessibility -n -t int -s 1" 2>/dev/null || true
 
+# --- computer_use / cua-driver setup ---
+# Ensure ~/.hermes + minimal config exist and DISPLAY is wired for the agent
+su - "$USER" -c 'mkdir -p ~/.hermes'
+if [ ! -f /home/$USER/.hermes/config.yaml ]; then
+  su - "$USER" -c 'cat > ~/.hermes/config.yaml <<YAML
+computer_use:
+  cua_telemetry: false
+YAML'
+fi
+# Persist DISPLAY/XAUTHORITY for every login shell the agent uses
+grep -q 'HERMES SPIKE DISPLAY' /home/$USER/.bashrc 2>/dev/null || \
+  printf '\n# HERMES SPIKE DISPLAY\nexport DISPLAY=:1\nexport XAUTHORITY=/home/%s/.Xauthority\n' "$USER" \
+  >> /home/$USER/.bashrc
+chown -R $USER:$USER /home/$USER/.hermes /home/$USER/.bashrc
+
+# Install cua-driver once (needs network on first boot)
+if [ ! -f /home/$USER/.hermes/.cua-installed ]; then
+  if su - "$USER" -c 'DISPLAY=:1 hermes computer-use install'; then
+    su - "$USER" -c 'touch ~/.hermes/.cua-installed'
+  else
+    echo "WARN: hermes computer-use install failed (see logs)"
+  fi
+fi
+
 # NoVNC
 websockify --web=/usr/share/novnc 6080 localhost:5901 &
 WS=$!
