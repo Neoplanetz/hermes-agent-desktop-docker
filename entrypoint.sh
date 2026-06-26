@@ -83,19 +83,21 @@ sleep 3
 su - "$USER" -c "DISPLAY=:1 xfconf-query -c xsettings -p /Net/EnableAccessibility -n -t int -s 1" 2>/dev/null || true
 
 # --- computer_use / cua-driver setup ---
-# Ensure ~/.hermes + minimal config exist and DISPLAY is wired for the agent
+# Seed ~/.hermes/config.yaml + SOUL.md from build-time template if absent.
+# (Task 2's first-boot cp -an already handles this on a truly fresh volume;
+# this loop is a defensive net for partial-seed or custom-user scenarios.)
 su - "$USER" -c 'mkdir -p ~/.hermes'
-if [ ! -f /home/$USER/.hermes/config.yaml ]; then
-  su - "$USER" -c 'cat > ~/.hermes/config.yaml <<YAML
-computer_use:
-  cua_telemetry: false
-YAML'
-fi
+for f in config.yaml SOUL.md; do
+  if [ ! -f "/home/$USER/.hermes/$f" ] && [ -f "/opt/hermes-defaults/.hermes/$f" ]; then
+    cp "/opt/hermes-defaults/.hermes/$f" "/home/$USER/.hermes/$f"
+  fi
+done
+chown -R "$USER:$USER" "/home/$USER/.hermes"
 # Persist DISPLAY/XAUTHORITY for every login shell the agent uses
 grep -q 'HERMES DESKTOP DISPLAY' /home/$USER/.bashrc 2>/dev/null || \
   printf '\n# HERMES DESKTOP DISPLAY\nexport DISPLAY=:1\nexport XAUTHORITY=/home/%s/.Xauthority\n' "$USER" \
   >> /home/$USER/.bashrc
-chown -R $USER:$USER /home/$USER/.hermes /home/$USER/.bashrc
+chown "$USER:$USER" "/home/$USER/.bashrc"
 
 # Install cua-driver once (needs network on first boot)
 if [ ! -f /home/$USER/.hermes/.cua-installed ]; then

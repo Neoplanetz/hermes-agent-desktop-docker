@@ -47,7 +47,11 @@ RUN wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-
 
 # Home template seeded onto the (volume-shadowed) home on first boot
 RUN mkdir -p /opt/hermes-defaults/.vnc /opt/hermes-defaults/Desktop \
+      /opt/hermes-defaults/.hermes \
     && cp /home/hermes/.bashrc /opt/hermes-defaults/ 2>/dev/null || true
+COPY configs/config.yaml /opt/hermes-defaults/.hermes/config.yaml
+RUN printf '# SOUL.md — Hermes persona\nYou are a helpful assistant running on a Linux desktop. Be concise.\n' \
+      > /opt/hermes-defaults/.hermes/SOUL.md
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
