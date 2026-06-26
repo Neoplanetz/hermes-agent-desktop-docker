@@ -6,7 +6,7 @@ docker compose up -d
 echo "Waiting for services to settle..."
 ready=0
 for i in $(seq 1 30); do
-  if docker exec hermes-spike su - hermes -c 'DISPLAY=:1 xdpyinfo >/dev/null 2>&1'; then
+  if docker exec hermes-desktop su - hermes -c 'DISPLAY=:1 xdpyinfo >/dev/null 2>&1'; then
     ready=1; break
   fi
   sleep 1

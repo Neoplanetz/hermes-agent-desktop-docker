@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Passes when Xvnc :1 is up and NoVNC serves the web client.
 set -euo pipefail
-C=hermes-spike
+C=hermes-desktop
 echo "[verify-desktop] X display :1 present?"
 docker exec "$C" su - hermes -c 'DISPLAY=:1 xdpyinfo >/dev/null' \
   && echo "  OK :1 reachable" || { echo "  FAIL :1"; exit 1; }

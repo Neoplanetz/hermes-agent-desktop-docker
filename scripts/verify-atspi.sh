@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Passes when the AT-SPI a11y bus is up and the accessibility tree is readable on :1.
 set -euo pipefail
-C=hermes-spike
+C=hermes-desktop
 echo "[verify-atspi] a11y bus address resolvable?"
 docker exec "$C" su - hermes -c \
   'DISPLAY=:1 dbus-send --session --print-reply --dest=org.a11y.Bus \

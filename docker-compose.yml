@@ -1,8 +1,11 @@
 services:
-  hermes-spike:
+  hermes-desktop:
     build: { context: ., dockerfile: Dockerfile }
-    image: hermes-desktop-spike:latest
-    container_name: hermes-spike
+    image: hermes-desktop:latest
+    container_name: hermes-desktop
+    environment:
+      - HERMES_USER=${HERMES_USER:-hermes}
+      - HERMES_PASSWORD=${HERMES_PASSWORD:-hermes123}
     ports:
       - "127.0.0.1:6080:6080"
       - "127.0.0.1:5901:5901"

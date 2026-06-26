@@ -1,4 +1,6 @@
+# Hermes Agent Desktop
 FROM ubuntu:24.04
+LABEL org.opencontainers.image.title="Hermes Agent Desktop"
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=Asia/Seoul \
     DISPLAY=:1 \

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-C=hermes-spike
+C=hermes-desktop
 echo "[verify-hermes] hermes on PATH at /usr/local/bin?"
 docker exec "$C" su - hermes -c 'command -v hermes' | grep -q '/usr/local/bin/hermes' \
   && echo "  OK path" || { echo "  FAIL path"; exit 1; }

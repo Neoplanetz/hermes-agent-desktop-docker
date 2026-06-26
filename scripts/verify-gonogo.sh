@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The Phase 1 go/no-go gate. All four checks must pass.
 set -euo pipefail
-C=hermes-spike
+C=hermes-desktop
 fail() { echo "  FAIL: $1"; exit 1; }
 
 echo "[1/4] hermes computer-use doctor"
