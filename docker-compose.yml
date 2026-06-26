@@ -1,0 +1,11 @@
+services:
+  hermes-spike:
+    build: { context: ., dockerfile: Dockerfile }
+    image: hermes-desktop-spike:latest
+    container_name: hermes-spike
+    ports:
+      - "127.0.0.1:6080:6080"
+      - "127.0.0.1:5901:5901"
+    shm_size: "2gb"
+    security_opt: [ "seccomp=unconfined" ]
+    restart: unless-stopped
