@@ -43,6 +43,34 @@ if [ -d /opt/hermes-defaults ] && [ ! -e "/home/$USER/.seeded" ]; then
 fi
 chown -R "$USER:$USER" "/home/$USER"
 
+# ── Desktop shortcuts — place + trust (defensive: works on fresh AND existing volumes) ──
+DESKTOP_DIR="/home/$USER/Desktop"
+mkdir -p "$DESKTOP_DIR"
+for s in hermes-terminal.desktop hermes-setup.desktop; do
+  [ -f "$DESKTOP_DIR/$s" ] || cp "/opt/hermes-defaults/Desktop/$s" "$DESKTOP_DIR/$s" 2>/dev/null || true
+done
+for f in "$DESKTOP_DIR"/*.desktop; do
+  [ -f "$f" ] || continue
+  chmod +x "$f"
+  su - "$USER" -c "dbus-launch gio set '$f' metadata::trusted true" 2>/dev/null || true
+done
+chown -R "$USER:$USER" "$DESKTOP_DIR"
+# Ensure subsequent login shells (including non-interactive su -) can reach the
+# XFCE session's dbus bus so `gio info` sees metadata::trusted without dbus-launch.
+grep -q 'HERMES_DBUS_PROFILE' "/home/$USER/.profile" 2>/dev/null || \
+  cat >> "/home/$USER/.profile" << 'PROFILE_DBUS'
+# HERMES_DBUS_PROFILE: expose the running XFCE session bus to gio (metadata::trusted)
+if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+  _mach=$(cat /etc/machine-id 2>/dev/null)
+  _sess="$HOME/.dbus/session-bus/${_mach}-1"
+  if [ -f "$_sess" ]; then
+    . "$_sess" 2>/dev/null || true
+    export DBUS_SESSION_BUS_ADDRESS
+  fi
+fi
+PROFILE_DBUS
+chown "$USER:$USER" "/home/$USER/.profile"
+
 # VNC password
 mkdir -p /home/$USER/.vnc
 echo "$PASSWORD" | vncpasswd -f > /home/$USER/.vnc/passwd

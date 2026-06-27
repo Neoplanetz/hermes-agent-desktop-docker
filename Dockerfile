@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       x11-utils xauth \
       fonts-noto-cjk fonts-noto-color-emoji \
       at-spi2-core gir1.2-atspi-2.0 python3-gi \
+      libglib2.0-bin gvfs \
       mousepad xdotool \
     && ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -50,6 +51,7 @@ RUN mkdir -p /opt/hermes-defaults/.vnc /opt/hermes-defaults/Desktop \
       /opt/hermes-defaults/.hermes \
     && cp /home/hermes/.bashrc /opt/hermes-defaults/ 2>/dev/null || true
 COPY configs/config.yaml /opt/hermes-defaults/.hermes/config.yaml
+COPY configs/desktop/hermes-terminal.desktop configs/desktop/hermes-setup.desktop /opt/hermes-defaults/Desktop/
 RUN printf '# SOUL.md — Hermes persona\nYou are a helpful assistant running on a Linux desktop. Be concise.\n' \
       > /opt/hermes-defaults/.hermes/SOUL.md
 

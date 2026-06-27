@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Hermes Terminal
+Comment=Hermes TUI (computer_use enabled)
+Exec=xfce4-terminal -e "bash -lc 'DISPLAY=:1 hermes; exec bash'"
+Icon=utilities-terminal
+Terminal=false
+Categories=Utility;
