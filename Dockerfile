@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       x11-utils xauth \
       fonts-noto-cjk fonts-noto-color-emoji \
       at-spi2-core gir1.2-atspi-2.0 python3-gi \
-      libglib2.0-bin gvfs \
+      libglib2.0-bin gvfs gvfs-daemons \
       mousepad xdotool \
     && ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -62,6 +62,34 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY configs/xrdp/startwm.sh /etc/xrdp/startwm.sh
 RUN chmod +x /etc/xrdp/startwm.sh \
     && sed -i 's/^#xserverbpp=24/xserverbpp=24/' /etc/xrdp/xrdp.ini || true
+
+# Ensure DISPLAY/XAUTHORITY are set in every login shell; expose the live
+# XFCE session D-Bus address with a socket-liveness check so `gio info` can
+# reach gvfsd-metadata to read metadata::trusted in non-interactive su - calls.
+# Both files are rootfs (not volume) — image-upgradeable, never volume-locked.
+RUN printf 'export DISPLAY="${DISPLAY:-:1}"\nexport XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"\n' \
+      > /etc/profile.d/hermes-display.sh \
+    && chmod 0644 /etc/profile.d/hermes-display.sh \
+    && cat > /etc/profile.d/hermes-dbus.sh << 'EOSH'
+# Expose live XFCE session D-Bus address to login shells (e.g. su - for gio info).
+# Rootfs file — image-upgradeable, NOT on the user-home volume.
+if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+  _mach=$(cat /etc/machine-id 2>/dev/null)
+  _sess="${HOME}/.dbus/session-bus/${_mach}-1"
+  if [ -f "$_sess" ]; then
+    . "$_sess" 2>/dev/null || true
+    # Liveness check: only export if the socket file is live
+    _sock="${DBUS_SESSION_BUS_ADDRESS#unix:path=}"
+    _sock="${_sock%%,*}"
+    if [ -n "${_sock}" ] && [ -S "${_sock}" ]; then
+      export DBUS_SESSION_BUS_ADDRESS
+    else
+      unset DBUS_SESSION_BUS_ADDRESS 2>/dev/null || true
+    fi
+  fi
+fi
+EOSH
+RUN chmod 0644 /etc/profile.d/hermes-dbus.sh
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
