@@ -14,13 +14,15 @@ Three access paths all reach **the same desktop**:
 ### RDP convergence detail
 
 xrdp is configured with a `[Hermes-:1]` session that uses the `libvnc.so` backend,
-pointing to `127.0.0.1:5901`. When an RDP client connects (e.g. Remmina, Windows RDC)
-and selects the **"Hermes Desktop (:1)"** session, xrdp proxies the connection to the
+pointing to `127.0.0.1:5901`. The `[Globals]` section sets `autorun=Hermes-:1`, so xrdp
+**automatically connects** to that session after authentication — no session-type combo
+selection is required. When an RDP client connects (e.g. Remmina, Windows RDC) and the
+user enters credentials and presses Enter, xrdp proxies the connection directly to the
 same TigerVNC display `:1` that `computer_use` acts on. There is no second X session —
 all access paths share one desktop.
 
-This means `computer_use` actions are observable in real time over RDP as well as over
-NoVNC or a raw VNC client.
+This means `computer_use` actions are observable in real time over RDP **by default**,
+as well as over NoVNC or a raw VNC client.
 
 ## Security notes
 
@@ -40,7 +42,7 @@ NoVNC or a raw VNC client.
 After starting the container (`./scripts/spike-up.sh`), the manual acceptance check is:
 
 1. Open `http://localhost:6080/vnc.html` — confirm the XFCE desktop is visible.
-2. RDP to `localhost:3390`, select the "Hermes Desktop (:1)" session.
+2. RDP to `localhost:3390`, enter credentials and press Enter — xrdp auto-connects to the converged `:1` session (no manual session selection required).
 3. Confirm you see **the same desktop** as in step 1 (e.g. same open windows, same cursor position after a mouse move).
 
 This confirms RDP is converged onto `:1` rather than spawning a new session.

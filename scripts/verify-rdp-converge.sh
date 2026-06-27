@@ -24,4 +24,7 @@ docker exec "$C" bash -c '
     echo "FAIL: password is unexpanded literal \${PASSWORD}"; exit 1
   fi
 ' && echo "  OK password expanded (not printed)" || exit 1
-echo "[verify-rdp-converge] PASS (manual: RDP in shows the SAME desktop as NoVNC)"
+echo "[verify-rdp-converge] autorun=Hermes-:1 set in [Globals] (default RDP session)?"
+docker exec "$C" bash -c 'grep -q "^autorun=Hermes-:1" /etc/xrdp/xrdp.ini' \
+  && echo "  OK autorun=Hermes-:1 found in xrdp.ini" || { echo "  FAIL autorun=Hermes-:1 missing — default RDP session not converged"; exit 1; }
+echo "[verify-rdp-converge] PASS (manual: RDP login auto-connects to :1, no session-combo selection needed)"
