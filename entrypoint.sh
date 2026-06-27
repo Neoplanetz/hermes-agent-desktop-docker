@@ -93,7 +93,9 @@ fi
 # Converge RDP onto the existing :1 (TigerVNC on 5901) via libvnc.
 # Replaces the default Xorg session so an RDP login lands on :1.
 if [ -f /usr/lib/xrdp/libvnc.so ] || [ -f /usr/lib/x86_64-linux-gnu/xrdp/libvnc.so ]; then
-  cat > /etc/xrdp/xrdp.ini.d-hermes <<RDPCONV || true
+  # Build the session block in a variable (unquoted heredoc expands ${PASSWORD}).
+  # No temp file is written — avoids leaving a plaintext password on disk.
+  BLOCK=$(cat <<RDPCONV
 [Hermes-:1]
 name=Hermes Desktop (:1)
 lib=libvnc.so
@@ -102,11 +104,13 @@ password=${PASSWORD}
 ip=127.0.0.1
 port=5901
 RDPCONV
-  # Splice our session to the top of the [Globals]→sessions list (idempotent)
+)
+  # Append the session block to xrdp.ini (idempotent). Session appears last in
+  # the RDP session dropdown (appended, not spliced to the top).
   if ! grep -q '^\[Hermes-:1\]' /etc/xrdp/xrdp.ini; then
-    cat /etc/xrdp/xrdp.ini.d-hermes >> /etc/xrdp/xrdp.ini
+    printf '\n%s\n' "$BLOCK" >> /etc/xrdp/xrdp.ini || true
   fi
-  chmod 600 /etc/xrdp/xrdp.ini
+  chmod 600 /etc/xrdp/xrdp.ini || true
 fi
 /etc/init.d/xrdp start 2>/dev/null || { xrdp-sesman; xrdp; } || true
 

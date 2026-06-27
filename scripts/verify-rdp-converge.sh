@@ -6,7 +6,22 @@ C=hermes-desktop
 echo "[verify-rdp-converge] libvnc module present?"
 docker exec "$C" bash -c 'ls /usr/lib/xrdp/libvnc.so >/dev/null 2>&1 || ls /usr/lib/x86_64-linux-gnu/xrdp/libvnc.so >/dev/null 2>&1' \
   && echo "  OK libvnc.so" || { echo "  FAIL libvnc.so missing"; exit 1; }
-echo "[verify-rdp-converge] xrdp.ini has a session targeting 127.0.0.1:5901 via libvnc?"
-docker exec "$C" bash -c 'grep -A8 -iE "^\[.*\]" /etc/xrdp/xrdp.ini | grep -q "lib=libvnc.so" && grep -q "5901" /etc/xrdp/xrdp.ini' \
-  && echo "  OK converge session" || { echo "  FAIL no libvnc/5901 session"; exit 1; }
+echo "[verify-rdp-converge] [Hermes-:1] section present in xrdp.ini?"
+docker exec "$C" bash -c 'grep -q "^\[Hermes-:1\]" /etc/xrdp/xrdp.ini' \
+  && echo "  OK [Hermes-:1] section found" || { echo "  FAIL [Hermes-:1] section missing"; exit 1; }
+echo "[verify-rdp-converge] section contains lib=libvnc.so, ip=127.0.0.1, port=5901?"
+docker exec "$C" bash -c '
+  sec=$(grep -A8 "^\[Hermes-:1\]" /etc/xrdp/xrdp.ini)
+  echo "$sec" | grep -q "lib=libvnc.so"  || { echo "FAIL: lib=libvnc.so missing in [Hermes-:1] section"; exit 1; }
+  echo "$sec" | grep -q "ip=127.0.0.1"   || { echo "FAIL: ip=127.0.0.1 missing in [Hermes-:1] section"; exit 1; }
+  echo "$sec" | grep -q "port=5901"      || { echo "FAIL: port=5901 missing in [Hermes-:1] section"; exit 1; }
+' && echo "  OK lib/ip/port in [Hermes-:1] section" || exit 1
+echo "[verify-rdp-converge] password in section is expanded (non-empty, not literal \${PASSWORD})?"
+docker exec "$C" bash -c '
+  sec=$(grep -A8 "^\[Hermes-:1\]" /etc/xrdp/xrdp.ini)
+  echo "$sec" | grep -qE "^password=.+" || { echo "FAIL: password line missing or empty in section"; exit 1; }
+  if echo "$sec" | grep -qF "password=\${PASSWORD}"; then
+    echo "FAIL: password is unexpanded literal \${PASSWORD}"; exit 1
+  fi
+' && echo "  OK password expanded (not printed)" || exit 1
 echo "[verify-rdp-converge] PASS (manual: RDP in shows the SAME desktop as NoVNC)"
