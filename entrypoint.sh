@@ -90,6 +90,24 @@ if [ -f /etc/xrdp/key.pem ]; then
     chmod 640 /etc/xrdp/key.pem
     chgrp ssl-cert /etc/xrdp/key.pem 2>/dev/null || chmod 644 /etc/xrdp/key.pem
 fi
+# Converge RDP onto the existing :1 (TigerVNC on 5901) via libvnc.
+# Replaces the default Xorg session so an RDP login lands on :1.
+if [ -f /usr/lib/xrdp/libvnc.so ] || [ -f /usr/lib/x86_64-linux-gnu/xrdp/libvnc.so ]; then
+  cat > /etc/xrdp/xrdp.ini.d-hermes <<RDPCONV || true
+[Hermes-:1]
+name=Hermes Desktop (:1)
+lib=libvnc.so
+username=na
+password=${PASSWORD}
+ip=127.0.0.1
+port=5901
+RDPCONV
+  # Splice our session to the top of the [Globals]→sessions list (idempotent)
+  if ! grep -q '^\[Hermes-:1\]' /etc/xrdp/xrdp.ini; then
+    cat /etc/xrdp/xrdp.ini.d-hermes >> /etc/xrdp/xrdp.ini
+  fi
+  chmod 600 /etc/xrdp/xrdp.ini
+fi
 /etc/init.d/xrdp start 2>/dev/null || { xrdp-sesman; xrdp; } || true
 
 # --- computer_use / cua-driver setup ---
