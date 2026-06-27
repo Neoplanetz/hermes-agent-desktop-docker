@@ -82,6 +82,16 @@ sleep 3
 # Turn on toolkit accessibility in xfconf settings (|| true — xfconfd may not be ready yet)
 su - "$USER" -c "DISPLAY=:1 xfconf-query -c xsettings -p /Net/EnableAccessibility -n -t int -s 1" 2>/dev/null || true
 
+# ── xRDP (RDP access on 3389) ──
+echo "xfce4-session" > "/home/$USER/.xsession"
+chown "$USER:$USER" "/home/$USER/.xsession"
+[ -f /etc/xrdp/rsakeys.ini ] || xrdp-keygen xrdp /etc/xrdp/rsakeys.ini 2>/dev/null || true
+if [ -f /etc/xrdp/key.pem ]; then
+    chmod 640 /etc/xrdp/key.pem
+    chgrp ssl-cert /etc/xrdp/key.pem 2>/dev/null || chmod 644 /etc/xrdp/key.pem
+fi
+/etc/init.d/xrdp start 2>/dev/null || { xrdp-sesman; xrdp; } || true
+
 # --- computer_use / cua-driver setup ---
 # Seed ~/.hermes/config.yaml + SOUL.md from build-time template if absent.
 # (Task 2's first-boot cp -an already handles this on a truly fresh volume;

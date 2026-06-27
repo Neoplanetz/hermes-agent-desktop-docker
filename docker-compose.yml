@@ -9,6 +9,7 @@ services:
     ports:
       - "127.0.0.1:6080:6080"
       - "127.0.0.1:5901:5901"
+      - "127.0.0.1:3390:3389"
     volumes:
       - hermes-home:/home/${HERMES_USER:-hermes}
     shm_size: "2gb"

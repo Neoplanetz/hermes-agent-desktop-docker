@@ -53,7 +53,15 @@ COPY configs/config.yaml /opt/hermes-defaults/.hermes/config.yaml
 RUN printf '# SOUL.md — Hermes persona\nYou are a helpful assistant running on a Linux desktop. Be concise.\n' \
       > /opt/hermes-defaults/.hermes/SOUL.md
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      xrdp xorgxrdp \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Session hook (separate XFCE session; Task 3 converges onto :1 via libvnc)
+COPY configs/xrdp/startwm.sh /etc/xrdp/startwm.sh
+RUN chmod +x /etc/xrdp/startwm.sh \
+    && sed -i 's/^#xserverbpp=24/xserverbpp=24/' /etc/xrdp/xrdp.ini || true
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-EXPOSE 6080 5901 9222
+EXPOSE 6080 5901 9222 3389
 ENTRYPOINT ["/entrypoint.sh"]
