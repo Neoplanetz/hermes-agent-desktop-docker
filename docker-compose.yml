@@ -9,6 +9,9 @@ services:
     ports:
       - "127.0.0.1:6080:6080"
       - "127.0.0.1:5901:5901"
+      # RDP: xrdp listens on 3389 inside the container; published to host 3390
+      # because host 3389 may already be taken by a local RDP service
+      # (e.g. gnome-remote-desktop). Connect RDP clients to localhost:3390.
       - "127.0.0.1:3390:3389"
     volumes:
       - hermes-home:/home/${HERMES_USER:-hermes}
