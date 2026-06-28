@@ -13,6 +13,9 @@ services:
       # because host 3389 may already be taken by a local RDP service
       # (e.g. gnome-remote-desktop). Connect RDP clients to localhost:3390.
       - "127.0.0.1:3390:3389"
+      # Dashboard: hermes dashboard binds 0.0.0.0:9119 inside the container
+      # (basic-auth required on a non-loopback bind); published to host loopback only.
+      - "127.0.0.1:9119:9119"
     volumes:
       - hermes-home:/home/${HERMES_USER:-hermes}
     shm_size: "2gb"
@@ -20,7 +23,7 @@ services:
     restart: unless-stopped
     init: true
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:6080/vnc.html >/dev/null && su - \"${HERMES_USER:-hermes}\" -c 'DISPLAY=:1 xdpyinfo >/dev/null 2>&1' && pgrep -x xrdp >/dev/null && pgrep -x xrdp-sesman >/dev/null"]
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:6080/vnc.html >/dev/null && su - \"${HERMES_USER:-hermes}\" -c 'DISPLAY=:1 xdpyinfo >/dev/null 2>&1' && pgrep -x xrdp >/dev/null && pgrep -x xrdp-sesman >/dev/null && ss -ltnH 'sport = :9119' | grep -q ."]
       interval: 30s
       timeout: 10s
       retries: 3

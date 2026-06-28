@@ -168,6 +168,37 @@ if [ ! -f /home/$USER/.hermes/.cua-installed ]; then
   fi
 fi
 
+# ── Hermes web dashboard (9119, basic-auth = desktop credentials) ──
+# Bind 0.0.0.0 so Docker's 127.0.0.1:9119:9119 host-map reaches it; a non-loopback
+# bind forces an auth provider, so configure BasicAuthProvider from the desktop
+# creds. No plaintext password at rest: compute a scrypt hash (password via env,
+# never interpolated) and persist a random signing secret. The env file is
+# user-owned, mode 600, and holds only the hash + secret + username.
+DASH_DIR="/home/$USER/.hermes"
+DASH_SECRET_FILE="$DASH_DIR/.dashboard-secret"
+DASH_ENV_FILE="$DASH_DIR/dashboard.env"
+su - "$USER" -c 'mkdir -p ~/.hermes/logs'
+PW_HASH="$(HPW="$PASSWORD" PYTHONPATH=/usr/local/lib/hermes-agent \
+  /usr/local/lib/hermes-agent/venv/bin/python -c \
+  'import os; from plugins.dashboard_auth.basic import hash_password; print(hash_password(os.environ["HPW"]))')"
+if [ ! -s "$DASH_SECRET_FILE" ]; then
+  ( umask 077; /usr/local/lib/hermes-agent/venv/bin/python -c 'import secrets; print(secrets.token_hex(32))' > "$DASH_SECRET_FILE" )
+fi
+DASH_SECRET="$(cat "$DASH_SECRET_FILE")"
+( umask 077
+  {
+    printf "HERMES_DASHBOARD_BASIC_AUTH_USERNAME='%s'\n" "$USER"
+    printf "HERMES_DASHBOARD_BASIC_AUTH_PASSWORD_HASH='%s'\n" "$PW_HASH"
+    printf "HERMES_DASHBOARD_BASIC_AUTH_SECRET='%s'\n" "$DASH_SECRET"
+  } > "$DASH_ENV_FILE"
+)
+chown -R "$USER:$USER" "$DASH_DIR"
+# Launch detached as the user; source the auth env (single-quoted values, safe to source).
+setsid su - "$USER" -c 'set -a; . ~/.hermes/dashboard.env; set +a; \
+  exec hermes dashboard --host 0.0.0.0 --port 9119 --no-open --skip-build' \
+  >> "$DASH_DIR/logs/dashboard.boot.log" 2>&1 &
+echo "Hermes dashboard starting on http://localhost:9119 (login: $USER / <desktop password>)"
+
 # NoVNC
 websockify --web=/usr/share/novnc 6080 localhost:5901 &
 WS=$!

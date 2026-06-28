@@ -38,6 +38,12 @@ RUN curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- \
       --branch "${HERMES_BRANCH}" --commit "${HERMES_COMMIT}" \
     && /usr/local/bin/hermes --version
 
+# Pre-build the dashboard web UI so the runtime launch can use --skip-build
+# (no npm at boot). Output lands in web/dist under the immutable FHS lib dir.
+RUN cd /usr/local/lib/hermes-agent/web \
+    && npm run build \
+    && test -d /usr/local/lib/hermes-agent/hermes_cli/web_dist
+
 # Google Chrome (amd64) with --no-sandbox wrapper for CDP/computer-use
 RUN wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
     && (apt-get update && apt-get install -y /tmp/chrome.deb || (apt-get -f install -y && apt-get install -y /tmp/chrome.deb)) \
@@ -94,5 +100,5 @@ RUN chmod 0644 /etc/profile.d/hermes-dbus.sh
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-EXPOSE 6080 5901 9222 3389
+EXPOSE 6080 5901 9222 3389 9119
 ENTRYPOINT ["/entrypoint.sh"]
