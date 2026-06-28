@@ -31,10 +31,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Hermes Agent — root FHS install (/usr/local/bin/hermes), pinned, non-interactive.
 ARG HERMES_BRANCH=main
+ARG HERMES_COMMIT=dd0e4ab81abccf7df5b11c6c16853d5e5de9db69
 ENV HERMES_HOME=/root/.hermes
 RUN curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- \
       --non-interactive --skip-setup --skip-browser --no-skills \
-      --branch "${HERMES_BRANCH}" \
+      --branch "${HERMES_BRANCH}" --commit "${HERMES_COMMIT}" \
     && /usr/local/bin/hermes --version
 
 # Google Chrome (amd64) with --no-sandbox wrapper for CDP/computer-use
