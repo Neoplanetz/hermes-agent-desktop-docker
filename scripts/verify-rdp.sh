@@ -8,4 +8,6 @@ echo "[verify-rdp] startwm hook installed + executable?"
 docker exec "$C" test -x /etc/xrdp/startwm.sh && echo "  OK startwm" || { echo "  FAIL startwm"; exit 1; }
 echo "[verify-rdp] xrdp process healthy (no crash loop)?"
 docker exec "$C" pgrep -x xrdp >/dev/null && echo "  OK xrdp running" || { echo "  FAIL xrdp not running"; exit 1; }
+echo "[verify-rdp] xrdp-sesman running?"
+docker exec "$C" pgrep -x xrdp-sesman >/dev/null && echo "  OK sesman" || { echo "  FAIL sesman not running"; exit 1; }
 echo "[verify-rdp] PASS"

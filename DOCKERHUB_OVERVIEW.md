@@ -24,6 +24,7 @@ docker run -d \
   -p 127.0.0.1:5901:5901 \
   -p 127.0.0.1:3390:3389 \
   -p 127.0.0.1:9119:9119 \
+  -v hermes-home:/home/hermes \
   hermes-desktop
 ```
 

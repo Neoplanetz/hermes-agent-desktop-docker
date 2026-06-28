@@ -33,7 +33,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # then purged so they never reach the final image.
 ARG HERMES_BRANCH=main
 ARG HERMES_COMMIT=dd0e4ab81abccf7df5b11c6c16853d5e5de9db69
-ENV HERMES_HOME=/root/.hermes
 RUN apt-get update && apt-get install -y --no-install-recommends \
       build-essential python3-dev pkg-config libffi-dev \
     && curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- \
