@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Hermes Dashboard
+Comment=Web dashboard — model, API keys, chat, channels (login with your desktop user/password)
+Exec=google-chrome-stable http://127.0.0.1:9119
+Icon=preferences-desktop-remote-desktop
+Terminal=false
+Categories=Utility;Network;

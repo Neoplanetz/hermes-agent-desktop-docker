@@ -46,7 +46,7 @@ chown -R "$USER:$USER" "/home/$USER"
 # ── Desktop shortcuts — place + trust (only the known Hermes launchers; injection-safe) ──
 DESKTOP_DIR="/home/$USER/Desktop"
 mkdir -p "$DESKTOP_DIR"
-for s in hermes-terminal.desktop hermes-setup.desktop; do
+for s in hermes-terminal.desktop hermes-setup.desktop hermes-dashboard.desktop; do
   f="$DESKTOP_DIR/$s"
   [ -f "$f" ] || cp "/opt/hermes-defaults/Desktop/$s" "$f" 2>/dev/null || true
   [ -f "$f" ] || continue

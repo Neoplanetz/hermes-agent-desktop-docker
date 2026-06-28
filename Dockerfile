@@ -58,7 +58,7 @@ RUN mkdir -p /opt/hermes-defaults/.vnc /opt/hermes-defaults/Desktop \
       /opt/hermes-defaults/.hermes \
     && cp /home/hermes/.bashrc /opt/hermes-defaults/ 2>/dev/null || true
 COPY configs/config.yaml /opt/hermes-defaults/.hermes/config.yaml
-COPY configs/desktop/hermes-terminal.desktop configs/desktop/hermes-setup.desktop /opt/hermes-defaults/Desktop/
+COPY configs/desktop/hermes-terminal.desktop configs/desktop/hermes-setup.desktop configs/desktop/hermes-dashboard.desktop /opt/hermes-defaults/Desktop/
 RUN printf '# SOUL.md — Hermes persona\nYou are a helpful assistant running on a Linux desktop. Be concise.\n' \
       > /opt/hermes-defaults/.hermes/SOUL.md
 
