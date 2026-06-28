@@ -3,7 +3,7 @@ Version=1.0
 Type=Application
 Name=Hermes Setup
 Comment=Hermes onboarding (model, channels, skills)
-Exec=xfce4-terminal -e "bash -lc 'hermes setup; exec bash'"
+Exec=xfce4-terminal --command="bash -lc 'hermes setup; exec bash'"
 Icon=preferences-system
 Terminal=false
 Categories=Utility;

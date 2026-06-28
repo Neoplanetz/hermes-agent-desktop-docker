@@ -10,5 +10,9 @@ case "$pid1" in
 esac
 echo "[verify-init] healthcheck reports a status?"
 hs=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$C")
-[ "$hs" != "none" ] && echo "  OK health=$hs" || { echo "  FAIL no healthcheck"; exit 1; }
+case "$hs" in
+  starting|healthy) echo "  OK health=$hs" ;;
+  none) echo "  FAIL no healthcheck"; exit 1 ;;
+  *) echo "  FAIL health=$hs (unhealthy)"; exit 1 ;;
+esac
 echo "[verify-init] PASS"

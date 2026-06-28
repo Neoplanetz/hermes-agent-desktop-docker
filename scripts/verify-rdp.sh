@@ -3,7 +3,7 @@
 set -euo pipefail
 C=hermes-desktop
 echo "[verify-rdp] xrdp listening on 3389?"
-docker exec "$C" bash -c 'ss -ltn | grep -q ":3389"' && echo "  OK 3389" || { echo "  FAIL 3389"; exit 1; }
+docker exec "$C" bash -c 'ss -ltnH "sport = :3389" | grep -q .' && echo "  OK 3389" || { echo "  FAIL 3389"; exit 1; }
 echo "[verify-rdp] startwm hook installed + executable?"
 docker exec "$C" test -x /etc/xrdp/startwm.sh && echo "  OK startwm" || { echo "  FAIL startwm"; exit 1; }
 echo "[verify-rdp] xrdp process healthy (no crash loop)?"

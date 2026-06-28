@@ -43,16 +43,16 @@ if [ -d /opt/hermes-defaults ] && [ ! -e "/home/$USER/.seeded" ]; then
 fi
 chown -R "$USER:$USER" "/home/$USER"
 
-# ── Desktop shortcuts — place + trust (defensive: works on fresh AND existing volumes) ──
+# ── Desktop shortcuts — place + trust (only the known Hermes launchers; injection-safe) ──
 DESKTOP_DIR="/home/$USER/Desktop"
 mkdir -p "$DESKTOP_DIR"
 for s in hermes-terminal.desktop hermes-setup.desktop; do
-  [ -f "$DESKTOP_DIR/$s" ] || cp "/opt/hermes-defaults/Desktop/$s" "$DESKTOP_DIR/$s" 2>/dev/null || true
-done
-for f in "$DESKTOP_DIR"/*.desktop; do
+  f="$DESKTOP_DIR/$s"
+  [ -f "$f" ] || cp "/opt/hermes-defaults/Desktop/$s" "$f" 2>/dev/null || true
   [ -f "$f" ] || continue
   chmod +x "$f"
-  su - "$USER" -c "dbus-launch gio set '$f' metadata::trusted true" 2>/dev/null || true
+  # Pass the path as a positional arg ($1) — never interpolate it into the shell string.
+  su - "$USER" -c 'dbus-launch gio set "$1" metadata::trusted true' _ "$f" 2>/dev/null || true
 done
 chown -R "$USER:$USER" "$DESKTOP_DIR"
 
@@ -120,10 +120,13 @@ ip=127.0.0.1
 port=5901
 RDPCONV
 )
-  # Append the session block to xrdp.ini (idempotent).
-  if ! grep -q '^\[Hermes-:1\]' /etc/xrdp/xrdp.ini; then
-    printf '\n%s\n' "$BLOCK" >> /etc/xrdp/xrdp.ini || true
+  # Re-sync [Hermes-:1] every boot so its password matches the CURRENT VNC password
+  # (the VNC passwd file is regenerated each boot). Remove any prior block (it is always
+  # the last section) then re-append fresh via printf (literal — safe for any password char).
+  if grep -q '^\[Hermes-:1\]' /etc/xrdp/xrdp.ini; then
+    sed -i '/^\[Hermes-:1\]/,$d' /etc/xrdp/xrdp.ini || true
   fi
+  printf '\n%s\n' "$BLOCK" >> /etc/xrdp/xrdp.ini || true
   chmod 600 /etc/xrdp/xrdp.ini || true
   # Make [Hermes-:1] the default RDP session: autorun skips the session-type combo
   # so a plain credentials+Enter login lands on :1 without any manual selection.
