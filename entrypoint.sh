@@ -103,15 +103,13 @@ if [ -f /etc/xrdp/key.pem ]; then
     chmod 640 /etc/xrdp/key.pem
     chgrp ssl-cert /etc/xrdp/key.pem 2>/dev/null || chmod 644 /etc/xrdp/key.pem
 fi
-# Converge RDP onto the existing :1 (TigerVNC on 5901) via libvnc.
-# Replaces the default Xorg session so an RDP login lands on :1.
+# Converge RDP onto the existing :1 (TigerVNC on 5901) via libvnc, as the DEFAULT session.
+# xrdp uses the FIRST session section by default, so insert the libvnc proxy BEFORE [Xorg]
+# (and set autorun). Colon-free section name so autorun matches reliably.
 if [ -f /usr/lib/xrdp/libvnc.so ] || [ -f /usr/lib/x86_64-linux-gnu/xrdp/libvnc.so ]; then
-  # chmod 600 BEFORE writing the secret (no early-boot window where 0644 file holds VNC password).
-  chmod 600 /etc/xrdp/xrdp.ini || true
-  # Build the session block in a variable (unquoted heredoc expands ${PASSWORD}).
-  # No temp file is written — avoids leaving a plaintext password on disk.
+  # Session block (unquoted heredoc expands ${PASSWORD}; only ever written via printf %s — literal-safe).
   BLOCK=$(cat <<RDPCONV
-[Hermes-:1]
+[Hermes]
 name=Hermes Desktop (:1)
 lib=libvnc.so
 username=na
@@ -120,18 +118,26 @@ ip=127.0.0.1
 port=5901
 RDPCONV
 )
-  # Re-sync [Hermes-:1] every boot so its password matches the CURRENT VNC password
-  # (the VNC passwd file is regenerated each boot). Remove any prior block (it is always
-  # the last section) then re-append fresh via printf (literal — safe for any password char).
-  if grep -q '^\[Hermes-:1\]' /etc/xrdp/xrdp.ini; then
-    sed -i '/^\[Hermes-:1\]/,$d' /etc/xrdp/xrdp.ini || true
-  fi
-  printf '\n%s\n' "$BLOCK" >> /etc/xrdp/xrdp.ini || true
+  ( umask 077
+    # Drop any prior [Hermes] section (awk handles STRUCTURE only — no secret passes through it).
+    awk '/^\[Hermes\]$/{h=1;next} h&&/^\[/{h=0} h{next} {print}' /etc/xrdp/xrdp.ini > /etc/xrdp/xrdp.ini.s1
+    # Insert the block immediately BEFORE [Xorg] so it is the first/default session.
+    xln=$(grep -n '^\[Xorg\]$' /etc/xrdp/xrdp.ini.s1 | head -1 | cut -d: -f1)
+    if [ -n "$xln" ]; then
+      head -n "$((xln-1))" /etc/xrdp/xrdp.ini.s1 > /etc/xrdp/xrdp.ini.s2
+      printf '%s\n\n' "$BLOCK" >> /etc/xrdp/xrdp.ini.s2
+      tail -n "+$xln" /etc/xrdp/xrdp.ini.s1 >> /etc/xrdp/xrdp.ini.s2
+      mv /etc/xrdp/xrdp.ini.s2 /etc/xrdp/xrdp.ini
+    else
+      printf '\n%s\n' "$BLOCK" >> /etc/xrdp/xrdp.ini.s1
+      mv /etc/xrdp/xrdp.ini.s1 /etc/xrdp/xrdp.ini
+    fi
+    rm -f /etc/xrdp/xrdp.ini.s1
+  ) || true
   chmod 600 /etc/xrdp/xrdp.ini || true
-  # Make [Hermes-:1] the default RDP session: autorun skips the session-type combo
-  # so a plain credentials+Enter login lands on :1 without any manual selection.
-  if ! grep -q '^autorun=Hermes-:1' /etc/xrdp/xrdp.ini; then
-    sed -i '0,/^\[Globals\]/ s//[Globals]\nautorun=Hermes-:1/' /etc/xrdp/xrdp.ini || true
+  # autorun (skips the session combo on clients that honor it; colon-free name).
+  if ! grep -q '^autorun=Hermes$' /etc/xrdp/xrdp.ini; then
+    sed -i '0,/^\[Globals\]/ s//[Globals]\nautorun=Hermes/' /etc/xrdp/xrdp.ini || true
   fi
 fi
 /etc/init.d/xrdp start 2>/dev/null || { xrdp-sesman; xrdp; } || true
