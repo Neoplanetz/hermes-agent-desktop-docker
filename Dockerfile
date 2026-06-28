@@ -26,23 +26,25 @@ RUN userdel -r ubuntu 2>/dev/null || true \
 # Hermes runtime deps (installer declines these under --non-interactive)
 RUN apt-get update && apt-get install -y --no-install-recommends \
       git ripgrep ffmpeg \
-      build-essential python3-dev pkg-config libffi-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Hermes Agent — root FHS install (/usr/local/bin/hermes), pinned, non-interactive.
+# Build deps live ONLY in this layer: installed, used for the install + web build,
+# then purged so they never reach the final image.
 ARG HERMES_BRANCH=main
 ARG HERMES_COMMIT=dd0e4ab81abccf7df5b11c6c16853d5e5de9db69
 ENV HERMES_HOME=/root/.hermes
-RUN curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- \
-      --non-interactive --skip-setup --skip-browser --no-skills \
-      --branch "${HERMES_BRANCH}" --commit "${HERMES_COMMIT}" \
-    && /usr/local/bin/hermes --version
-
-# Pre-build the dashboard web UI so the runtime launch can use --skip-build
-# (no npm at boot). Output lands in web/dist under the immutable FHS lib dir.
-RUN cd /usr/local/lib/hermes-agent/web \
-    && npm run build \
-    && test -d /usr/local/lib/hermes-agent/hermes_cli/web_dist
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential python3-dev pkg-config libffi-dev \
+    && curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- \
+         --non-interactive --skip-setup --skip-browser --no-skills \
+         --branch "${HERMES_BRANCH}" --commit "${HERMES_COMMIT}" \
+    && /usr/local/bin/hermes --version \
+    && cd /usr/local/lib/hermes-agent/web && npm run build \
+    && test -d /usr/local/lib/hermes-agent/hermes_cli/web_dist \
+    && apt-get purge -y build-essential python3-dev pkg-config libffi-dev \
+    && apt-get autoremove -y \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Google Chrome (amd64) with --no-sandbox wrapper for CDP/computer-use
 RUN wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
