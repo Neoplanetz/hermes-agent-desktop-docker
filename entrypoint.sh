@@ -79,7 +79,7 @@ chown $USER:$USER /home/$USER/.vnc/xstartup
 
 # AT-SPI / accessibility for computer_use
 cat > /home/$USER/.xprofile <<'EOF'
-export GTK_MODULES=gail:atk-bridge
+export GTK_MODULES=atk-bridge
 export QT_ACCESSIBILITY=1
 export NO_AT_BRIDGE=0
 export OOO_FORCE_DESKTOP=gnome
@@ -161,7 +161,11 @@ chown "$USER:$USER" "/home/$USER/.bashrc"
 
 # Install cua-driver once (needs network on first boot)
 if [ ! -f /home/$USER/.hermes/.cua-installed ]; then
-  if su - "$USER" -c 'DISPLAY=:1 hermes computer-use install'; then
+  # Pre-create ~/.local/bin so ~/.profile adds it to PATH at next login-shell
+  # startup; without this the directory doesn't exist yet on a fresh volume
+  # and shutil.which("cua-driver") can't find the just-installed binary.
+  su - "$USER" -c 'mkdir -p ~/.local/bin'
+  if su - "$USER" -c 'PATH=/opt/hermes-noop:$PATH DISPLAY=:1 hermes computer-use install'; then
     su - "$USER" -c 'touch ~/.hermes/.cua-installed'
   else
     echo "WARN: hermes computer-use install failed (see logs)"

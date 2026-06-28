@@ -98,6 +98,13 @@ fi
 EOSH
 RUN chmod 0644 /etc/profile.d/hermes-dbus.sh
 
+# No-op systemctl shim, used ONLY (via PATH prefix) for the cua-driver install
+# step so its systemd-unit registration "succeeds" silently in this no-systemd
+# container. Does NOT shadow the real /usr/bin/systemctl for anything else.
+RUN mkdir -p /opt/hermes-noop \
+    && printf '#!/bin/sh\nexit 0\n' > /opt/hermes-noop/systemctl \
+    && chmod 0755 /opt/hermes-noop/systemctl
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 EXPOSE 6080 5901 9222 3389 9119
