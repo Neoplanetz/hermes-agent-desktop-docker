@@ -201,5 +201,5 @@ echo "Hermes dashboard starting on http://localhost:9119 (login: $USER / <deskto
 # NoVNC
 websockify --web=/usr/share/novnc 6080 localhost:5901 &
 WS=$!
-echo "Hermes desktop up: NoVNC http://localhost:6080/vnc.html  (vnc pw: $PASSWORD)"
+echo "Hermes desktop up: NoVNC http://localhost:6080/vnc.html  (vnc pw: set via HERMES_PASSWORD)"
 wait $WS
