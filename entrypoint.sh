@@ -153,11 +153,6 @@ for f in config.yaml SOUL.md; do
   fi
 done
 chown -R "$USER:$USER" "/home/$USER/.hermes"
-# Persist DISPLAY/XAUTHORITY for every login shell the agent uses
-grep -q 'HERMES DESKTOP DISPLAY' /home/$USER/.bashrc 2>/dev/null || \
-  printf '\n# HERMES DESKTOP DISPLAY\nexport DISPLAY=:1\nexport XAUTHORITY=/home/%s/.Xauthority\n' "$USER" \
-  >> /home/$USER/.bashrc
-chown "$USER:$USER" "/home/$USER/.bashrc"
 
 # Install cua-driver once (needs network on first boot)
 if [ ! -f /home/$USER/.hermes/.cua-installed ]; then
