@@ -98,9 +98,10 @@ fi
 EOSH
 RUN chmod 0644 /etc/profile.d/hermes-dbus.sh
 
-# No-op systemctl shim, used ONLY (via PATH prefix) for the cua-driver install
-# step so its systemd-unit registration "succeeds" silently in this no-systemd
-# container. Does NOT shadow the real /usr/bin/systemctl for anything else.
+# No-op systemctl shim — retained for forward-compat (cua --autostart or future
+# upstream changes). The active cua-warning fix is `mkdir -p ~/.local/bin` in
+# entrypoint.sh (so shutil.which finds cua-driver). Does NOT shadow the real
+# /usr/bin/systemctl globally; used only via PATH-prefix on the install call.
 RUN mkdir -p /opt/hermes-noop \
     && printf '#!/bin/sh\nexit 0\n' > /opt/hermes-noop/systemctl \
     && chmod 0755 /opt/hermes-noop/systemctl
