@@ -32,12 +32,23 @@ agent's `computer_use` actions are visible no matter how you connect
 
 ## What the agent can do
 
-- **`computer_use`** — reads the AT-SPI accessibility tree and injects input via
-  XTest on `:1` (enabled by default; `hermes computer-use doctor` to check).
-- **Visible browser** — launch Chrome on `:1` with `--remote-debugging-port=9222`
-  and `/browser connect` attaches to it over CDP so you can watch.
+- **`computer_use`** — reads the desktop's window list + AT-SPI accessibility tree
+  on `:1` and drives apps via cua-driver (`hermes computer-use doctor` to check).
+  ⚠️ Keyboard input into native GTK apps does not work yet — see **Known limitations**.
+- **Visible browser** — a CDP-enabled Chrome autostarts on `:1`; `/browser connect`
+  and the agent's `page` tool attach over CDP (`:9222`) so the agent can read/drive
+  the page while you watch.
 - **Dashboard** — Status, Chat (embedded TUI), Config, API Keys, Sessions,
   Skills, MCP, Logs, Cron, Channels.
+
+## Known limitations
+
+- **Keyboard input into native GTK apps via `computer_use` does not work yet.**
+  cua-driver injects keystrokes via XSendEvent (synthetic X events, which GTK
+  ignores) and via AT-SPI element targeting (but GTK editors like Mousepad don't
+  expose their text widget in the AT-SPI tree). Raw XTest input works, but
+  cua-driver 0.6.8 doesn't use it. The **browser-automation path (CDP) works.**
+  Needs an upstream cua-driver input fix — details in `docs/E2E-ACCEPTANCE.md`.
 
 ## Configuration
 
