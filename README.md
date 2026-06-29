@@ -43,19 +43,21 @@ agent's `computer_use` actions are visible no matter how you connect
 
 ## Known limitations
 
-- **Keyboard input into native GTK apps via `computer_use` does not work yet** —
-  and the cause is the driver, not the desktop. The editor's text widget *is*
-  exposed in the AT-SPI tree (verified: a `text` accessible with both `Text` and
-  `EditableText`). cua-driver 0.6.8 has two gaps: (1) `get_window_state` doesn't
-  enumerate that text element (only the menubar + toolbar), so the model is never
-  handed something to target; (2) all cua-driver input is XSendEvent (synthetic X
-  events, "no focus steal"), which GTK ignores for **both clicks and keystrokes** —
-  so cua-driver can't even focus the editor, and its AT-SPI typing path (which *does*
-  work once the widget has focus) never engages. A real XTest click focuses the
-  widget → cua-driver then types fine (`"path": "ax"`); the binary even ships a
-  `send_type_text_xtest` path but reserves it (terminals) with no toggle for GTK
-  editors. The **browser-automation path (CDP) works.** Needs an upstream cua-driver
-  fix — details in `docs/E2E-ACCEPTANCE.md`.
+- **Keyboard input into native GTK apps via `computer_use` does not work yet** under
+  this VNC desktop. **Root cause is the X server**, not GTK: this image runs TigerVNC
+  `Xvnc`, which exposes only its built-in VNC/XTEST input and **does not accept
+  `uinput`/`libinput` virtual input devices**. cua-driver's native Linux real-input
+  path is a `uinput` virtual device — under `Xvnc` it can't attach ("`uinput/libinput
+  pointers cannot become real X input devices`", per cua-driver's own diagnostic), so
+  it silently falls back to **XSendEvent** (synthetic events), which GTK ignores for
+  **both clicks and keystrokes**. On a normal Xorg session those uinput devices
+  register as real input and typing works — which is why upstream docs say it works,
+  and why trycua flags Linux as a *pre-release* backend. Verified corollaries: the
+  text widget *is* exposed in AT-SPI (a `text` accessible with `Text`+`EditableText`);
+  cua-driver's `get_window_state` doesn't enumerate it; and if the widget is focused
+  out-of-band via a real XTest click, cua-driver then types fine (`"path": "ax"`).
+  The **browser-automation path (CDP) works.** Full analysis + the Xvnc/uinput root
+  cause in `docs/E2E-ACCEPTANCE.md`.
 
 ## Configuration
 

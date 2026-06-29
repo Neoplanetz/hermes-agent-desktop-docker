@@ -108,3 +108,42 @@ editor). The AT-SPI typing path itself is sound once focus exists. Fix is upstre
 surface the text element in `get_window_state`, and/or route GTK editors through the
 existing `send_type_text_xtest` path (or expose an XTest toggle). Repro scripts used
 for this correction live in the session scratchpad (AT-SPI walk + cua-driver A/B).
+
+---
+
+## Deeper root cause — 2026-06-30 (it's the X server: Xvnc rejects uinput)
+
+The proximate cause above ("cua-driver uses XSendEvent, which GTK ignores") is real,
+but the *reason* cua-driver uses XSendEvent here is **environmental — the X server.**
+cua-driver's own diagnostic string (extracted from the 0.6.8 binary) says it outright:
+
+> `server is Xtigervnc. Xtigervnc exposes only its built-in VNC/XTEST devices, so`
+> `Linux uinput/libinput pointers cannot become real X input devices in this`
+> `environment.` (and: `parallel_mouse_drag is not supported on this server`)
+
+cua-driver's native Linux input path is a **`uinput` virtual input device** (it links
+`evdev::uinput::VirtualDevice`). On a standard Xorg session, libinput/evdev picks up
+that uinput device as a **real X input device** → events look real → GTK accepts them
+→ typing/clicks work (this is what upstream docs mean by Linux = "XTest (X11)"). But
+**TigerVNC's `Xvnc` does not read `/dev/uinput` devices** — it only has its own
+built-in VNC/XTEST input — so cua-driver's uinput device "cannot become a real X input
+device," and it falls back to **XSendEvent**, which GTK ignores. That is the whole bug.
+
+Evidence gathered this session:
+- `xdpyinfo` on `:1` lists the **XTEST** extension, and `xdotool` (which uses XTest)
+  *does* focus + type here — so XTEST works on Xvnc. cua-driver simply does **not** use
+  XTEST as its input fallback (uinput → XSendEvent, never XTEST).
+- cua-driver `doctor` reports `display server: X11`, `AT-SPI reachable`, and its X11
+  input plan is self-described as **"AT-SPI + XSendEvent input will work"** — i.e. it
+  never intended XTest on this server.
+
+**Implication / fix direction:** the clean fix is to **replace the X server** — run a
+real `Xorg` (headless via the `dummy` video driver) with `libinput`, served over VNC
+by `x11vnc`/`x0vncserver`, instead of TigerVNC's `Xvnc`. Then cua-driver's uinput path
+attaches as real input and typing/dragging work natively (no focus-assist hack).
+Requirements/caveats: the container needs **`/dev/uinput`** access (`--device
+/dev/uinput`, host `uinput` module loaded, write permission for the session user), and
+the RDP→`:1`/dashboard/persistence topology has to be re-wired off `Xvnc`. The
+lighter alternative is the verified **focus-assist** workaround (XTest click to focus,
+which works because XTEST is present on Xvnc) — narrower (GUI editors only), no
+`/dev/uinput` needed.
