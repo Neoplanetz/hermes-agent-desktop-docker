@@ -47,14 +47,31 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get autoremove -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Google Chrome (amd64) with --no-sandbox wrapper for CDP/computer-use
-RUN wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && (apt-get update && apt-get install -y /tmp/chrome.deb || (apt-get -f install -y && apt-get install -y /tmp/chrome.deb)) \
-    && rm -f /tmp/chrome.deb \
-    && mv /usr/bin/google-chrome-stable /usr/bin/google-chrome-stable-real \
-    && printf '#!/bin/bash\nexec /usr/bin/google-chrome-stable-real --no-sandbox "$@"\n' > /usr/bin/google-chrome-stable \
-    && chmod +x /usr/bin/google-chrome-stable \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Browser with a --no-sandbox `google-chrome-stable` wrapper (CDP/computer-use).
+# amd64: Google Chrome (.deb). arm64: Chromium from the xtradeb PPA — Google
+# Chrome ships no arm64 Linux build and Ubuntu 24.04's `chromium` is a snap
+# (unusable in a container). The wrapper name is identical on both arches, so
+# the entrypoint, desktop shortcuts, and verify-gonogo work unchanged.
+ARG TARGETARCH
+RUN set -eux; \
+    if [ "${TARGETARCH}" = "arm64" ]; then \
+      apt-get update; \
+      apt-get install -y --no-install-recommends software-properties-common; \
+      add-apt-repository -y ppa:xtradeb/apps; \
+      apt-get update; \
+      apt-get install -y --no-install-recommends chromium; \
+      apt-get purge -y software-properties-common; apt-get autoremove -y; \
+      CHROME_REAL="$(command -v chromium)"; \
+    else \
+      wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb; \
+      { apt-get update && apt-get install -y /tmp/chrome.deb; } || { apt-get -f install -y && apt-get install -y /tmp/chrome.deb; }; \
+      rm -f /tmp/chrome.deb; \
+      mv /usr/bin/google-chrome-stable /usr/bin/google-chrome-stable-real; \
+      CHROME_REAL=/usr/bin/google-chrome-stable-real; \
+    fi; \
+    printf '#!/bin/bash\nexec %s --no-sandbox "$@"\n' "$CHROME_REAL" > /usr/bin/google-chrome-stable; \
+    chmod +x /usr/bin/google-chrome-stable; \
+    apt-get clean; rm -rf /var/lib/apt/lists/*
 
 # Home template seeded onto the (volume-shadowed) home on first boot
 RUN mkdir -p /opt/hermes-defaults/.vnc /opt/hermes-defaults/Desktop \

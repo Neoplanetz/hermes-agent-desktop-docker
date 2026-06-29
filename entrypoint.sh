@@ -112,7 +112,7 @@ fi
 # Converge RDP onto the existing :1 (TigerVNC on 5901) via libvnc, as the DEFAULT session.
 # xrdp uses the FIRST session section by default, so insert the libvnc proxy BEFORE [Xorg]
 # (and set autorun). Colon-free section name so autorun matches reliably.
-if [ -f /usr/lib/xrdp/libvnc.so ] || [ -f /usr/lib/x86_64-linux-gnu/xrdp/libvnc.so ]; then
+if [ -f /usr/lib/xrdp/libvnc.so ] || [ -f /usr/lib/x86_64-linux-gnu/xrdp/libvnc.so ] || [ -f /usr/lib/aarch64-linux-gnu/xrdp/libvnc.so ]; then
   # Session block (unquoted heredoc expands ${PASSWORD}; only ever written via printf %s — literal-safe).
   BLOCK=$(cat <<RDPCONV
 [Hermes]
