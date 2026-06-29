@@ -67,3 +67,44 @@ checks, not just the ignored `metadata::trusted`).
 **Net:** the **browser-automation** path of `computer_use` works; **native GTK
 desktop typing does not** (cua-driver XSendEvent/AT-SPI vs GtkSourceView) and needs
 an upstream cua-driver input fix (XTest) or GTK AT-SPI text exposure.
+
+---
+
+## Correction — 2026-06-29 (driver-level reverse-engineering; supersedes the mechanism above)
+
+Re-investigated by driving cua-driver 0.6.8 directly against a live Mousepad and
+walking the AT-SPI tree. The earlier "GtkSourceView text widget is not exposed in the
+AT-SPI tree" claim is **wrong** — the widget *is* exposed. Verified facts:
+
+- A raw AT-SPI walk of a focused Mousepad finds the editor as a `text` accessible
+  implementing **both `Text` and `EditableText`** (depth 6, under
+  `page tab list → page tab → scroll pane`).
+- cua-driver's own `get_window_state` walker, however, **never enumerates that node**.
+  Its `elements` array (and `tree_markdown`) contain only the menubar (221 menu items
+  + 20 menus) and 15 toolbar buttons — so the model is never handed an
+  `element_index`/`element_token` for the text area. (`query` doesn't surface it either.)
+- All cua-driver actuation on Linux is **XSendEvent** (synthetic, `send_event=true`,
+  "no focus steal") — for clicks *and* keys. GTK ignores these. Confirmed A/B at
+  identical window-local coordinates: a cua-driver `click` (XSendEvent) does **not**
+  focus the GtkSourceView (the lazily-created `text` accessible never appears); an
+  `xdotool` click (XTest) at the same point **does** (the node appears).
+  `GDK_CORE_DEVICE_EVENTS=1` does not change this.
+- The `text` accessible is created **lazily** — it doesn't exist until the widget gets
+  real (XTest) focus. Hence a deadlock: cua-driver can't focus the editor (its click is
+  ignored), and without focus there's no AT-SPI element to type into, so `type_text`
+  falls back to `"path": "key_events"` (XSendEvent) → nothing lands.
+- **Once the widget is focused out-of-band (an XTest click), it works**: `type_text`
+  (no element) reports `"path": "ax"` and the text actually lands — verified by reading
+  the widget's content back over AT-SPI (`EditableText`).
+- The binary contains a `platform_linux::input::send_type_text_xtest` symbol, but it's
+  reserved (terminal emulators use pty/XTest) and there is no config/env toggle
+  (`cua-driver config` exposes only capture_mode/pip/image; no input-strategy
+  `CUA_DRIVER_RS_*` var) to force it for GTK editors.
+
+**Net (corrected):** native GTK typing fails because of **two cua-driver gaps** — its
+AT-SPI walker doesn't surface the editor element in `get_window_state`, and its
+XSendEvent-only input is ignored by GTK (so it can neither focus nor type into the
+editor). The AT-SPI typing path itself is sound once focus exists. Fix is upstream:
+surface the text element in `get_window_state`, and/or route GTK editors through the
+existing `send_type_text_xtest` path (or expose an XTest toggle). Repro scripts used
+for this correction live in the session scratchpad (AT-SPI walk + cua-driver A/B).

@@ -43,12 +43,19 @@ agent's `computer_use` actions are visible no matter how you connect
 
 ## Known limitations
 
-- **Keyboard input into native GTK apps via `computer_use` does not work yet.**
-  cua-driver injects keystrokes via XSendEvent (synthetic X events, which GTK
-  ignores) and via AT-SPI element targeting (but GTK editors like Mousepad don't
-  expose their text widget in the AT-SPI tree). Raw XTest input works, but
-  cua-driver 0.6.8 doesn't use it. The **browser-automation path (CDP) works.**
-  Needs an upstream cua-driver input fix — details in `docs/E2E-ACCEPTANCE.md`.
+- **Keyboard input into native GTK apps via `computer_use` does not work yet** —
+  and the cause is the driver, not the desktop. The editor's text widget *is*
+  exposed in the AT-SPI tree (verified: a `text` accessible with both `Text` and
+  `EditableText`). cua-driver 0.6.8 has two gaps: (1) `get_window_state` doesn't
+  enumerate that text element (only the menubar + toolbar), so the model is never
+  handed something to target; (2) all cua-driver input is XSendEvent (synthetic X
+  events, "no focus steal"), which GTK ignores for **both clicks and keystrokes** —
+  so cua-driver can't even focus the editor, and its AT-SPI typing path (which *does*
+  work once the widget has focus) never engages. A real XTest click focuses the
+  widget → cua-driver then types fine (`"path": "ax"`); the binary even ships a
+  `send_type_text_xtest` path but reserves it (terminals) with no toggle for GTK
+  editors. The **browser-automation path (CDP) works.** Needs an upstream cua-driver
+  fix — details in `docs/E2E-ACCEPTANCE.md`.
 
 ## Configuration
 
