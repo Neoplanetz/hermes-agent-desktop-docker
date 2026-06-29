@@ -1,4 +1,4 @@
-# hermes-desktop
+# Hermes Agent Desktop
 
 A turnkey Ubuntu 24.04 + XFCE4 desktop with **Hermes Agent** (Nous Research)
 pre-installed and its **`computer_use`** toolset wired to the desktop's `:1`
@@ -9,7 +9,7 @@ watch and steer over the web, VNC, or RDP.
 
 ```bash
 # 1. Pull the image
-docker pull hermes-desktop
+docker pull neoplanetz/hermes-desktop-docker
 
 # 2. Create your env file
 cat > .env <<'EOF'
@@ -25,8 +25,11 @@ docker run -d \
   -p 127.0.0.1:3390:3389 \
   -p 127.0.0.1:9119:9119 \
   -v hermes-home:/home/hermes \
-  hermes-desktop
+  neoplanetz/hermes-desktop-docker
 ```
+
+> The volume mounts `/home/hermes` because the example sets `HERMES_USER=hermes`.
+> If you change `HERMES_USER`, mount `/home/<user>` instead.
 
 Then open the **dashboard** at http://localhost:9119 and set a model + API key
 in the API Keys tab, or run `hermes setup` from the "Hermes Setup" desktop
@@ -59,7 +62,8 @@ Default credentials are `hermes` / `hermes123` —
 
 - `HERMES_USER` / `HERMES_PASSWORD` — desktop account, used for VNC/RDP and the
   dashboard login.
-- Per-user state persists in the `hermes-home` Docker volume (`~/.hermes`).
+- Per-user state persists in the `hermes-home` Docker volume (mounted at the
+  user's home; `~/.hermes` holds config, sessions, skills).
 - Model/provider are unset by default — configure at runtime in the dashboard.
 
 ## Security
