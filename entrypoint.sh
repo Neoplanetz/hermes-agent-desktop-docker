@@ -178,6 +178,20 @@ if [ ! -f /home/$USER/.hermes/.cua-installed ]; then
   fi
 fi
 
+# ── Visible CDP browser for the computer_use browser leg ──
+# Launch Chrome on :1 with remote debugging so Hermes `/browser connect` and
+# cua-driver's `page` tool can attach over CDP (:9222). Chrome 136+ DISABLES
+# --remote-debugging-port on the DEFAULT profile dir, so a DEDICATED --user-data-dir
+# is mandatory (a default-profile launch silently brings up no CDP socket).
+# Backgrounded and NOT supervised — if it dies the desktop stays up, and relaunch
+# is idempotent (same profile dir → reuses the running instance, no port rebind).
+CDP_PROFILE="/home/$USER/.config/google-chrome-cua"
+su - "$USER" -c "mkdir -p '$CDP_PROFILE' && DISPLAY=:1 setsid google-chrome-stable \
+  --remote-debugging-port=9222 --remote-allow-origins=* \
+  --user-data-dir='$CDP_PROFILE' --no-first-run --no-default-browser-check \
+  about:blank >/dev/null 2>&1 &" || true
+echo "Visible CDP browser launching on :1 (CDP endpoint 127.0.0.1:9222)"
+
 # ── Hermes web dashboard (9119, basic-auth = desktop credentials) ──
 # Bind 0.0.0.0 so Docker's 127.0.0.1:9119:9119 host-map reaches it; a non-loopback
 # bind forces an auth provider, so configure BasicAuthProvider from the desktop

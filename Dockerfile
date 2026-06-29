@@ -118,6 +118,13 @@ fi
 EOSH
 RUN chmod 0644 /etc/profile.d/hermes-dbus.sh
 
+# Point cua-driver + Hermes /browser at the visible Chrome's CDP endpoint so the
+# `page` toolset uses CDP (DOM-level: execute_javascript / query_dom / click_element)
+# instead of the read-only AT-SPI fallback. Rootfs file — reaches every `su -` login
+# shell that runs hermes/cua-driver. (The visible CDP Chrome is launched in entrypoint.sh.)
+RUN printf 'export CUA_DRIVER_CDP_PORT=9222\n' > /etc/profile.d/hermes-cdp.sh \
+    && chmod 0644 /etc/profile.d/hermes-cdp.sh
+
 # No-op systemctl shim — retained for forward-compat (cua --autostart or future
 # upstream changes). The active cua-warning fix is `mkdir -p ~/.local/bin` in
 # entrypoint.sh (so shutil.which finds cua-driver). Does NOT shadow the real
