@@ -1,0 +1,44 @@
+# Syncs DOCKERHUB_OVERVIEW.md to the Docker Hub repository's "Overview" tab so
+# we never have to remember to paste it manually after a release.
+#
+# Triggers:
+#   - push to main when the overview file (or this workflow) changes
+#   - manual run from the GitHub Actions UI (workflow_dispatch)
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   DOCKERHUB_USERNAME   Docker Hub username (e.g. neoplanetz)
+#   DOCKERHUB_TOKEN      Docker Hub access token with "Read, Write" scope
+#                        for neoplanetz/hermes-desktop-docker.
+#                        Generate at https://hub.docker.com/settings/security.
+#
+# The action does NOT touch the short description (the one-line tagline under
+# the image name), so anything maintainers set manually on the Hub page stays.
+
+name: Sync Docker Hub description
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'DOCKERHUB_OVERVIEW.md'
+      - '.github/workflows/dockerhub-description.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Push DOCKERHUB_OVERVIEW.md to Docker Hub
+        uses: peter-evans/dockerhub-description@e98e4d1628a5f3be2be7c231e50981aee98723ae # v4.0.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: neoplanetz/hermes-desktop-docker
+          readme-filepath: ./DOCKERHUB_OVERVIEW.md
