@@ -57,8 +57,14 @@ for s in hermes-terminal.desktop hermes-setup.desktop hermes-dashboard.desktop; 
   [ -f "$f" ] || cp "/opt/hermes-defaults/Desktop/$s" "$f" 2>/dev/null || true
   [ -f "$f" ] || continue
   chmod +x "$f"
-  # Pass the path as a positional arg ($1) — never interpolate it into the shell string.
-  su - "$USER" -c 'dbus-launch gio set "$1" metadata::trusted true' _ "$f" 2>/dev/null || true
+  # XFCE 4.18 (Ubuntu 24.04) trusts a launcher only when it is executable AND has
+  # metadata::xfce-exe-checksum == sha256(file contents) — exactly what the dialog's
+  # "Mark Executable" button writes. metadata::trusted (old GNOME/Nautilus convention)
+  # is IGNORED by XFCE, so setting only it left the "Untrusted application launcher"
+  # dialog on EVERY icon launch. Set both inside one dbus session so gvfsd-metadata
+  # persists them; path + checksum pass as positional args ($1/$2), never interpolated.
+  sum="$(sha256sum "$f" | cut -d' ' -f1)"
+  su - "$USER" -c 'dbus-launch sh -c '\''gio set "$1" metadata::trusted true; gio set "$1" metadata::xfce-exe-checksum "$2"'\'' _ "$1" "$2"' _ "$f" "$sum" 2>/dev/null || true
 done
 chown -R "$USER:$USER" "$DESKTOP_DIR"
 
