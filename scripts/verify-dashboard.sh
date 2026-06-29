@@ -8,8 +8,15 @@ docker exec "$C" bash -c 'ss -ltnH "sport = :9119" | grep -q .' \
 echo "[verify-dashboard] a hermes dashboard process owns it?"
 docker exec "$C" bash -lc 'pgrep -af "hermes dashboard" >/dev/null || pgrep -af "dashboard" | grep -q hermes' \
   && echo "  OK dashboard process" || { echo "  FAIL no dashboard process"; exit 1; }
-echo "[verify-dashboard] auth engaged (root is gated, not the open app)?"
+echo "[verify-dashboard] unauthenticated request is gated by STATUS (not an open 200 app)?"
+code=$(docker exec "$C" bash -lc 'curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://127.0.0.1:9119/' 2>/dev/null || echo 000)
+case "$code" in
+  401|403|302|303|307|308) echo "  OK gated (HTTP $code)" ;;
+  200) echo "  FAIL dashboard served 200 without auth (open)"; exit 1 ;;
+  *) echo "  FAIL unexpected HTTP $code"; exit 1 ;;
+esac
+echo "[verify-dashboard] the gate is a login page (body)?"
 body=$(docker exec "$C" bash -lc 'curl -s -L --max-time 5 http://127.0.0.1:9119/' 2>/dev/null || true)
 echo "$body" | grep -qiE 'login|password|sign in|authenticate' \
-  && echo "  OK auth gate visible" || { echo "  FAIL dashboard not auth-gated"; exit 1; }
+  && echo "  OK login page visible" || { echo "  FAIL no login page after redirect"; exit 1; }
 echo "[verify-dashboard] PASS (manual: open http://localhost:9119 → log in as $U / desktop password)"

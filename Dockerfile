@@ -41,6 +41,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && /usr/local/bin/hermes --version \
     && cd /usr/local/lib/hermes-agent/web && npm run build \
     && test -d /usr/local/lib/hermes-agent/hermes_cli/web_dist \
+    && rm -rf /usr/local/lib/hermes-agent/web/node_modules \
+    && npm cache clean --force \
     && apt-get purge -y build-essential python3-dev pkg-config libffi-dev \
     && apt-get autoremove -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*

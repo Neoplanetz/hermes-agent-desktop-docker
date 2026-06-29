@@ -14,6 +14,12 @@ case "$PASSWORD" in
     *[$'\n\r:']*) echo "FATAL: HERMES_PASSWORD contains newline, CR, or colon"; exit 1 ;;
 esac
 
+# Warn loudly when the published dev-default password is in use — it is PUBLICLY
+# KNOWN and is the single credential for VNC, RDP, and the web dashboard.
+if [ "$PASSWORD" = "hermes123" ]; then
+    echo "WARNING: HERMES_PASSWORD is the default 'hermes123' (publicly known). Set a strong HERMES_PASSWORD in .env before exposing VNC/RDP/dashboard beyond 127.0.0.1." >&2
+fi
+
 # ── Dynamic user creation (so HERMES_USER from env takes effect) ──
 # The image bakes 'hermes' (uid 1000) as the template account. If a different
 # HERMES_USER is requested, create it at runtime and seed its home from the
@@ -140,6 +146,11 @@ RDPCONV
     sed -i '0,/^\[Globals\]/ s//[Globals]\nautorun=Hermes/' /etc/xrdp/xrdp.ini || true
   fi
 fi
+# Clear stale xrdp PID files so xrdp re-starts cleanly on a container restart.
+# The writable layer persists /run across restarts; a stale PID makes the init
+# script (and start-stop-daemon) think xrdp is already up, so it never starts
+# and the healthcheck's `pgrep -x xrdp` fails → container stuck unhealthy.
+rm -f /var/run/xrdp/*.pid /run/xrdp/*.pid 2>/dev/null || true
 /etc/init.d/xrdp start 2>/dev/null || { xrdp-sesman; xrdp; } || true
 
 # --- computer_use / cua-driver setup ---
@@ -171,19 +182,19 @@ fi
 # Bind 0.0.0.0 so Docker's 127.0.0.1:9119:9119 host-map reaches it; a non-loopback
 # bind forces an auth provider, so configure BasicAuthProvider from the desktop
 # creds. No plaintext password at rest: compute a scrypt hash (password via env,
-# never interpolated) and persist a random signing secret. The env file is
-# user-owned, mode 600, and holds only the hash + secret + username.
+# never interpolated). The session-signing secret is DERIVED from the password
+# (HMAC) so changing HERMES_PASSWORD invalidates old sessions, while a stable
+# password keeps sessions valid across restarts — and no secret file sits at rest.
+# The env file is user-owned, mode 600, and holds only the hash + secret + username.
 DASH_DIR="/home/$USER/.hermes"
-DASH_SECRET_FILE="$DASH_DIR/.dashboard-secret"
 DASH_ENV_FILE="$DASH_DIR/dashboard.env"
 su - "$USER" -c 'mkdir -p ~/.hermes/logs'
+rm -f "$DASH_DIR/.dashboard-secret"   # legacy random secret — replaced by password-derived
 PW_HASH="$(HPW="$PASSWORD" PYTHONPATH=/usr/local/lib/hermes-agent \
   /usr/local/lib/hermes-agent/venv/bin/python -c \
   'import os; from plugins.dashboard_auth.basic import hash_password; print(hash_password(os.environ["HPW"]))')"
-if [ ! -s "$DASH_SECRET_FILE" ]; then
-  ( umask 077; /usr/local/lib/hermes-agent/venv/bin/python -c 'import secrets; print(secrets.token_hex(32))' > "$DASH_SECRET_FILE" )
-fi
-DASH_SECRET="$(cat "$DASH_SECRET_FILE")"
+DASH_SECRET="$(HPW="$PASSWORD" /usr/local/lib/hermes-agent/venv/bin/python -c \
+  'import os,hmac,hashlib; print(hmac.new(b"hermes-dashboard-session-v1", os.environ["HPW"].encode(), hashlib.sha256).hexdigest())')"
 ( umask 077
   {
     printf "HERMES_DASHBOARD_BASIC_AUTH_USERNAME='%s'\n" "$USER"
@@ -192,14 +203,22 @@ DASH_SECRET="$(cat "$DASH_SECRET_FILE")"
   } > "$DASH_ENV_FILE"
 )
 chown -R "$USER:$USER" "$DASH_DIR"
-# Launch detached as the user; source the auth env (single-quoted values, safe to source).
-setsid su - "$USER" -c 'set -a; . ~/.hermes/dashboard.env; set +a; \
+# Launch as the user (NOT setsid — we keep its PID to supervise it). Source the
+# auth env (single-quoted values, safe to source).
+su - "$USER" -c 'set -a; . ~/.hermes/dashboard.env; set +a; \
   exec hermes dashboard --host 0.0.0.0 --port 9119 --no-open --skip-build' \
   >> "$DASH_DIR/logs/dashboard.boot.log" 2>&1 &
+DASH=$!
 echo "Hermes dashboard starting on http://localhost:9119 (login: $USER / <desktop password>)"
 
 # NoVNC
 websockify --web=/usr/share/novnc 6080 localhost:5901 &
 WS=$!
 echo "Hermes desktop up: NoVNC http://localhost:6080/vnc.html  (vnc pw: set via HERMES_PASSWORD)"
-wait $WS
+
+# Supervise the two foreground-critical services: if EITHER the dashboard or
+# websockify exits, stop the container (exit non-zero) so Docker's
+# restart:unless-stopped recreates it — lightweight self-healing without s6.
+wait -n "$WS" "$DASH" || true
+echo "FATAL: a core service exited (websockify=$WS dashboard=$DASH) — stopping container for restart" >&2
+exit 1
