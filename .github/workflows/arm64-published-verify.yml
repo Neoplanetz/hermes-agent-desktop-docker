@@ -1,0 +1,57 @@
+# Native-arm64 verification of the PUBLISHED image.
+#
+# Pulls the published multi-arch image on a native arm64 runner and runs the full
+# verify-*.sh gate suite (pull-image mode) — the one environment that actually
+# exercises arm64 CDP Chrome (local QEMU emulation core-dumps it). Resolves the open
+# "native-arm64 CDP unverified" risk.
+#
+# Triggers: weekly schedule (Mon 06:00 UTC), manual (workflow_dispatch w/ tag input)
+# Runner:   ubuntu-24.04-arm (GitHub-hosted native arm64, free for public repos)
+# Secrets:  none (public image pull; GITHUB_TOKEN files the issue on failure)
+name: Verify published image (native arm64)
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Mondays 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Published image tag to verify'
+        default: '1.1.0'
+        required: false
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  IMAGE: neoplanetz/hermes-desktop-docker
+
+jobs:
+  verify-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve tag
+        id: tag
+        run: echo "tag=${{ github.event.inputs.tag || '1.1.0' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify published arm64 image (pull-image mode)
+        run: IMG="${IMAGE}:${{ steps.tag.outputs.tag }}" ./scripts/verify-all.sh
+
+      - name: Tear down (always)
+        if: always()
+        run: docker compose down -v || true
+
+      - name: Open an issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMG_REF: ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh issue create \
+            --title "native-arm64 verification failed (${IMG_REF})" \
+            --body "A native-arm64 gate run failed while verifying the published image \`${IMG_REF}\` on a real \`ubuntu-24.04-arm\` runner. See the failing gate in the run log: ${RUN_URL}"
