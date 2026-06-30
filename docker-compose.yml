@@ -19,7 +19,6 @@ services:
     volumes:
       - hermes-home:/home/${HERMES_USER:-hermes}
     shm_size: "2gb"
-    security_opt: [ "seccomp=unconfined" ]
     restart: unless-stopped
     init: true
     healthcheck:
