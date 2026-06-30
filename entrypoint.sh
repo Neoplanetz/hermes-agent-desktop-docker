@@ -159,7 +159,7 @@ fi
 rm -f /var/run/xrdp/*.pid /run/xrdp/*.pid 2>/dev/null || true
 /etc/init.d/xrdp start 2>/dev/null || { xrdp-sesman; xrdp; } || true
 
-# --- computer_use / cua-driver setup ---
+# --- config.yaml / SOUL.md seed (formerly also computer_use/cua-driver setup) ---
 # Seed ~/.hermes/config.yaml + SOUL.md from build-time template if absent.
 # (Task 2's first-boot cp -an already handles this on a truly fresh volume;
 # this loop is a defensive net for partial-seed or custom-user scenarios.)
@@ -170,19 +170,6 @@ for f in config.yaml SOUL.md; do
   fi
 done
 chown -R "$USER:$USER" "/home/$USER/.hermes"
-
-# Install cua-driver once (needs network on first boot)
-if [ ! -f /home/$USER/.hermes/.cua-installed ]; then
-  # Pre-create ~/.local/bin so ~/.profile adds it to PATH at next login-shell
-  # startup; without this the directory doesn't exist yet on a fresh volume
-  # and shutil.which("cua-driver") can't find the just-installed binary.
-  su - "$USER" -c 'mkdir -p ~/.local/bin'
-  if su - "$USER" -c 'PATH=/opt/hermes-noop:$PATH DISPLAY=:1 hermes computer-use install'; then
-    su - "$USER" -c 'touch ~/.hermes/.cua-installed'
-  else
-    echo "WARN: hermes computer-use install failed (see logs)"
-  fi
-fi
 
 # ── Visible CDP browser for the computer_use browser leg ──
 # Launch Chrome on :1 with remote debugging so Hermes `/browser connect` and
