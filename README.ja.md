@@ -1,6 +1,8 @@
 # Hermes Agent Desktop Docker
 
-🌐 [English](README.md) | [한국어](README.ko.md) | [中文](README.zh.md) | [日本語](README.ja.md)
+🇺🇸 [English](README.md) | 🇰🇷 [한국어](README.ko.md) | 🇨🇳 [中文](README.zh.md) | 🇯🇵 [日本語](README.ja.md)
+
+> 🔰 **Dockerは初めてですか？** [初心者ガイド](docs/GUIDE_FOR_BEGINNERS.ja.md)から始めましょう — 経験は不要です。
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/neoplanetz/hermes-desktop-docker)
 ![Image Size](https://img.shields.io/docker/image-size/neoplanetz/hermes-desktop-docker/latest)
