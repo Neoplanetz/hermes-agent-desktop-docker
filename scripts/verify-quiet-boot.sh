@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Boot-hygiene gate: GTK_MODULES carries no legacy `gail` (config-state assertion,
-# platform-independent). Run AFTER a fresh boot.
+# Boot-hygiene gate: AT-SPI daemon is absent (confirming clean AT-SPI removal).
+# Run AFTER a fresh boot.
 set -euo pipefail
 C=hermes-desktop
-echo "[verify-quiet-boot] GTK_MODULES has no gail (atk-bridge only)?"
-docker exec "$C" su - hermes -c 'cat ~/.xprofile 2>/dev/null' | grep -E '^export GTK_MODULES' | grep -qw gail \
-  && { echo "  FAIL gail still in GTK_MODULES"; exit 1; } || echo "  OK atk-bridge only (no gail)"
+echo "[verify-quiet-boot] at-spi-bus-launcher not running?"
+docker exec "$C" pgrep -x at-spi-bus-launcher >/dev/null 2>&1 \
+  && { echo "  FAIL at-spi-bus-launcher is still running"; exit 1; } || echo "  OK no at-spi-bus-launcher process"
 echo "[verify-quiet-boot] PASS"
