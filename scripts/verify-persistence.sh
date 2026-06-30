@@ -6,7 +6,7 @@ C=hermes-desktop; U="${HERMES_USER:-hermes}"
 echo "[verify-persistence] /home/$U is a mount (volume)?"
 docker exec "$C" sh -c "mount | grep -q ' /home/$U '" && echo "  OK mounted" || { echo "  FAIL not a mount"; exit 1; }
 echo "[verify-persistence] template-seeded files present on this volume?"
-docker exec "$C" su - "$U" -c 'test -f ~/.vnc/xstartup && test -f ~/.xprofile' \
+docker exec "$C" su - "$U" -c 'test -f ~/.vnc/xstartup' \
   && echo "  OK seeded" || { echo "  FAIL not seeded"; exit 1; }
 echo "[verify-persistence] write marker, recreate container, marker survives?"
 docker exec "$C" su - "$U" -c 'echo persist-probe > ~/.persist-probe'

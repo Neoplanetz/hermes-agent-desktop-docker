@@ -49,6 +49,13 @@ if [ -d /opt/hermes-defaults ] && [ ! -e "/home/$USER/.seeded" ]; then
 fi
 chown -R "$USER:$USER" "/home/$USER"
 
+# ── Clean stale a11y .xprofile from pre-v2B volumes ──
+# Old entrypoint wrote ~/.xprofile with GTK_MODULES=atk-bridge / NO_AT_BRIDGE=0 etc.
+# That creation was removed, but existing volumes still carry the file and xstartup
+# sources it unconditionally, re-injecting dead a11y env. Nuke it only if it contains
+# the known a11y markers so a user-customised .xprofile is never touched.
+su - "$USER" -c 'if [ -f ~/.xprofile ] && grep -qE "atk-bridge|NO_AT_BRIDGE|QT_ACCESSIBILITY" ~/.xprofile; then rm -f ~/.xprofile; fi'
+
 # ── Desktop shortcuts — place + trust (only the known Hermes launchers; injection-safe) ──
 DESKTOP_DIR="/home/$USER/Desktop"
 mkdir -p "$DESKTOP_DIR"

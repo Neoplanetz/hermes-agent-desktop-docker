@@ -1,3 +1,5 @@
+> ⚠️ **HISTORICAL / SUPERSEDED.** This plan captured the cua-driver-removal round. Two later review rounds changed the end state: `9222` was removed from `EXPOSE` (CDP is loopback-only), `scripts/verify-atspi.sh` was deleted, and the AT-SPI/XTest tooling was removed. Treat specifics below as point-in-time; the repo is the source of truth.
+
 # Public CDP Scope — Implementation Plan (remove cua-driver)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
