@@ -1,9 +1,9 @@
 # Hermes Agent Desktop
 
 A turnkey Ubuntu 24.04 + XFCE4 desktop with **Hermes Agent** (Nous Research)
-pre-installed and its **`computer_use`** toolset wired to the desktop's `:1`
-display — so the agent can drive a real GUI and a visible browser while you
-watch and steer over the web, VNC, or RDP.
+pre-installed for **secure browser automation**: a CDP-enabled Chrome runs on
+the `:1` display and Hermes' `/browser` drives it, while you watch and steer over
+the web (NoVNC), VNC, or RDP. Runs with **no extra privilege** (`docker compose up`).
 
 ## Quick start
 
@@ -45,16 +45,16 @@ shortcut.
 | Web dashboard | http://localhost:9119 | `HERMES_USER` / `HERMES_PASSWORD` |
 
 All three remote-desktop paths converge on the **same** `:1` desktop, so the
-agent's `computer_use` actions are visible no matter how you connect.
+agent's browser actions are visible no matter how you connect.
 Default credentials are `hermes` / `hermes123` —
 **change them before exposing any port beyond loopback.**
 
 ## What the agent can do
 
-- **`computer_use`** — reads the AT-SPI accessibility tree and injects input via
-  XTest on `:1` (enabled by default; `hermes computer-use doctor` to check).
-- **Visible browser** — launch Chrome on `:1` with `--remote-debugging-port=9222`
-  and `/browser connect` attaches to it over CDP so you can watch.
+- **Browser automation (CDP)** — a CDP-enabled Chrome autostarts on `:1`; Hermes
+  `/browser` attaches over CDP (`127.0.0.1:9222`) so the agent reads and drives web
+  pages while you watch. (Native `computer_use` desktop input is not supported under
+  this VNC desktop — see the project README / `docs/E2E-ACCEPTANCE.md`.)
 - **Dashboard** — Status, Chat (embedded TUI), Config, API Keys, Sessions,
   Skills, MCP, Logs, Cron, Channels.
 
