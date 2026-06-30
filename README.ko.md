@@ -140,5 +140,9 @@ docker compose up -d
 
 ## 라이선스 및 링크
 
+이 저장소(Dockerfile, 스크립트, 설정, 문서)는 **[MIT 라이선스](LICENSE)**로
+배포됩니다. Hermes Agent 자체는 빌드 시 다운로드되며 Nous Research의 자체
+라이선스를 따릅니다.
+
 - Docker Hub: <https://hub.docker.com/r/neoplanetz/hermes-desktop-docker>
 - Hermes Agent (Nous Research): <https://hermes-agent.nousresearch.com>

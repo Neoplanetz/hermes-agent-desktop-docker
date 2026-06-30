@@ -212,3 +212,4 @@ Default credentials are `hermes` / `hermes123` —
   [🇨🇳 中文](https://github.com/Neoplanetz/hermes-agent-desktop-docker/blob/main/docs/GUIDE_FOR_BEGINNERS.zh.md) ·
   [🇯🇵 日本語](https://github.com/Neoplanetz/hermes-agent-desktop-docker/blob/main/docs/GUIDE_FOR_BEGINNERS.ja.md)
 - **Hermes Agent** (Nous Research): <https://hermes-agent.nousresearch.com>
+- **License**: [MIT](https://github.com/Neoplanetz/hermes-agent-desktop-docker/blob/main/LICENSE) — covers this repo's packaging (Dockerfile, scripts, configs, docs); Hermes Agent keeps its own Nous Research license.

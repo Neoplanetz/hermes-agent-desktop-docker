@@ -144,5 +144,9 @@ agent's browser actions are visible no matter how you connect
 
 ## License & links
 
+This repository (Dockerfile, scripts, configs, docs) is licensed under the
+**[MIT License](LICENSE)**. Hermes Agent itself is downloaded at build time and
+remains under its own license from Nous Research.
+
 - Docker Hub: <https://hub.docker.com/r/neoplanetz/hermes-desktop-docker>
 - Hermes Agent (Nous Research): <https://hermes-agent.nousresearch.com>

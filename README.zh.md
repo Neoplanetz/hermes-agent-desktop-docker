@@ -138,5 +138,8 @@ docker compose up -d
 
 ## 许可与链接
 
+本仓库（Dockerfile、脚本、配置、文档）依据 **[MIT 许可证](LICENSE)** 发布。
+Hermes Agent 本身在构建时下载，遵循 Nous Research 的自有许可证。
+
 - Docker Hub: <https://hub.docker.com/r/neoplanetz/hermes-desktop-docker>
 - Hermes Agent (Nous Research): <https://hermes-agent.nousresearch.com>
