@@ -1,7 +1,7 @@
 # Public Scope — Secure CDP Browser Automation (drop native computer_use desktop input)
 
 - **Date:** 2026-06-30
-- **Status:** Proposed (awaiting review)
+- **Status:** ✅ Implemented & shipped (2026-06-30). Option A adopted — cua-driver removed; live on `main` and Docker Hub.
 - **Repo:** hermes-agent-desktop-docker
 
 ## 1. Context & decision
