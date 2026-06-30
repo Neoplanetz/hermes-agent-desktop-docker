@@ -42,7 +42,7 @@ agent's browser actions are visible no matter how you connect
 
 ## Known limitations
 
-- **Keyboard input into native GTK apps via `computer_use` does not work yet** under
+- **Keyboard input into native GTK apps via `computer_use` is not supported (out of scope for this image)** under
   this VNC desktop. **Root cause is the X server**, not GTK: this image runs TigerVNC
   `Xvnc`, which exposes only its built-in VNC/XTEST input and **does not accept
   `uinput`/`libinput` virtual input devices**. cua-driver's native Linux real-input

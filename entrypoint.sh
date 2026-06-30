@@ -89,7 +89,7 @@ EOF
 chmod +x /home/$USER/.vnc/xstartup
 chown $USER:$USER /home/$USER/.vnc/xstartup
 
-# AT-SPI / accessibility for computer_use
+# AT-SPI / accessibility for the desktop
 cat > /home/$USER/.xprofile <<'EOF'
 export GTK_MODULES=atk-bridge
 export QT_ACCESSIBILITY=1
@@ -171,9 +171,9 @@ for f in config.yaml SOUL.md; do
 done
 chown -R "$USER:$USER" "/home/$USER/.hermes"
 
-# ── Visible CDP browser for the computer_use browser leg ──
-# Launch Chrome on :1 with remote debugging so Hermes `/browser connect` and
-# cua-driver's `page` tool can attach over CDP (:9222). Chrome 136+ DISABLES
+# ── Visible CDP browser for Hermes /browser ──
+# Launch Chrome on :1 with remote debugging so Hermes `/browser connect` can
+# attach over CDP (:9222). Chrome 136+ DISABLES
 # --remote-debugging-port on the DEFAULT profile dir, so a DEDICATED --user-data-dir
 # is mandatory (a default-profile launch silently brings up no CDP socket).
 # Backgrounded and NOT supervised — if it dies the desktop stays up, and relaunch

@@ -2,7 +2,7 @@
 Version=1.0
 Type=Application
 Name=Hermes Terminal
-Comment=Hermes TUI (computer_use enabled)
+Comment=Hermes TUI
 Exec=xfce4-terminal --command="bash -lc 'DISPLAY=:1 hermes; exec bash'"
 Icon=utilities-terminal
 Terminal=false

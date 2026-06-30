@@ -1,5 +1,2 @@
 # Hermes Agent Desktop — seeded defaults. Set your model in the dashboard
-# (Phase 2C) or via `hermes setup`. computer_use is pre-enabled for the
-# XFCE :1 desktop.
-computer_use:
-  cua_telemetry: false
+# or via `hermes setup`. No model or provider is pinned; configure at runtime.

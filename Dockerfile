@@ -118,8 +118,6 @@ fi
 EOSH
 RUN chmod 0644 /etc/profile.d/hermes-dbus.sh
 
-
-
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 EXPOSE 6080 5901 9222 3389 9119

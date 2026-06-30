@@ -21,7 +21,7 @@ docker exec "$C" bash -lc '
   || { echo "  FAIL :9222 not answering — entrypoint did not autostart CDP Chrome"; exit 1; }
 
 echo "[cdp] CDP accepts a new target (Hermes /browser attach surface)"
-docker exec "$C" bash -lc 'curl -fsS -X PUT http://127.0.0.1:9222/json/new?about:blank >/dev/null' \
+docker exec "$C" bash -lc 'curl -fsS -X PUT "http://127.0.0.1:9222/json/new?about:blank" >/dev/null' \
   && echo "  OK CDP target-creation works" \
   || { echo "  FAIL CDP did not create a target"; exit 1; }
 

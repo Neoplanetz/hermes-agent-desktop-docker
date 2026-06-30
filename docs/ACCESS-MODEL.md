@@ -18,10 +18,10 @@ pointing to `127.0.0.1:5901`. The `[Globals]` section sets `autorun=Hermes-:1`, 
 **automatically connects** to that session after authentication — no session-type combo
 selection is required. When an RDP client connects (e.g. Remmina, Windows RDC) and the
 user enters credentials and presses Enter, xrdp proxies the connection directly to the
-same TigerVNC display `:1` that `computer_use` acts on. There is no second X session —
+same TigerVNC display `:1` that browser automation acts on. There is no second X session —
 all access paths share one desktop.
 
-This means `computer_use` actions are observable in real time over RDP **by default**,
+This means browser automation actions are observable in real time over RDP **by default**,
 as well as over NoVNC or a raw VNC client.
 
 ## Security notes
