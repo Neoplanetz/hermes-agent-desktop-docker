@@ -179,7 +179,7 @@ chown -R "$USER:$USER" "/home/$USER/.hermes"
 # Backgrounded and NOT supervised — if it dies the desktop stays up, and relaunch
 # is idempotent (same profile dir → reuses the running instance, no port rebind).
 CDP_PROFILE="/home/$USER/.config/google-chrome-cua"
-su - "$USER" -c "mkdir -p '$CDP_PROFILE' && DISPLAY=:1 setsid google-chrome-stable \
+su - "$USER" -c "mkdir -p '$CDP_PROFILE' && rm -f '$CDP_PROFILE'/Singleton* && DISPLAY=:1 setsid google-chrome-stable \
   --remote-debugging-port=9222 --remote-allow-origins=* \
   --user-data-dir='$CDP_PROFILE' --no-first-run --no-default-browser-check \
   about:blank >/dev/null 2>&1 &" || true
