@@ -1,0 +1,34 @@
+# CI: build the image from source and run the full verify-*.sh gate suite (amd64).
+#
+# Triggers: pull_request -> main, push -> main, manual (workflow_dispatch)
+# Runner:   ubuntu-latest (amd64)
+# Secrets:  none (build-from-source; no registry, no push)
+#
+# The ~6 GB image build dominates runtime; a cold build is acceptable at this
+# repo's PR volume (build caching is an optional optimization, see
+# docs/superpowers/specs/2026-06-30-ci-verify-arm64-design.md).
+name: CI (verify gates, amd64)
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run full verify-gate suite (build mode)
+        run: ./scripts/verify-all.sh
+
+      - name: Tear down (always)
+        if: always()
+        run: docker compose down -v || true
