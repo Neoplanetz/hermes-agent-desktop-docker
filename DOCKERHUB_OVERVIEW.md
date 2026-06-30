@@ -4,6 +4,7 @@
 ![Image Size](https://img.shields.io/docker/image-size/neoplanetz/hermes-desktop-docker/latest)
 ![Version](https://img.shields.io/docker/v/neoplanetz/hermes-desktop-docker?sort=semver)
 ![Platforms](https://img.shields.io/badge/platforms-linux%2Famd64%20%7C%20linux%2Farm64-blue)
+[![GitHub](https://img.shields.io/badge/GitHub-source-181717?logo=github)](https://github.com/Neoplanetz/hermes-agent-desktop-docker)
 
 A turnkey Ubuntu 24.04 + XFCE4 desktop with **Hermes Agent** (Nous Research)
 pre-installed for **secure browser automation**: a CDP-enabled Chrome runs on
@@ -201,3 +202,13 @@ Default credentials are `hermes` / `hermes123` —
 | `3390` → `3389` | RDP — Remote Desktop / Remmina (host `3390` → container `3389`) |
 | `9119` | Hermes web dashboard |
 | `9222` | Chrome DevTools / CDP — **in-container only, not published** |
+
+## Links
+
+- **GitHub repository** (source, issues, full README): <https://github.com/Neoplanetz/hermes-agent-desktop-docker>
+- **Beginner's guide**:
+  [🇺🇸 English](https://github.com/Neoplanetz/hermes-agent-desktop-docker/blob/main/docs/GUIDE_FOR_BEGINNERS.md) ·
+  [🇰🇷 한국어](https://github.com/Neoplanetz/hermes-agent-desktop-docker/blob/main/docs/GUIDE_FOR_BEGINNERS.ko.md) ·
+  [🇨🇳 中文](https://github.com/Neoplanetz/hermes-agent-desktop-docker/blob/main/docs/GUIDE_FOR_BEGINNERS.zh.md) ·
+  [🇯🇵 日本語](https://github.com/Neoplanetz/hermes-agent-desktop-docker/blob/main/docs/GUIDE_FOR_BEGINNERS.ja.md)
+- **Hermes Agent** (Nous Research): <https://hermes-agent.nousresearch.com>
