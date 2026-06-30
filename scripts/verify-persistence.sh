@@ -18,7 +18,4 @@ for i in $(seq 1 30); do
 done
 docker exec "$C" su - "$U" -c 'grep -q persist-probe ~/.persist-probe' \
   && echo "  OK persisted across recreate" || { echo "  FAIL lost on recreate"; exit 1; }
-echo "[verify-persistence] cua-driver still functional after recreate (no reinstall)?"
-docker exec "$C" su - "$U" -c 'DISPLAY=:1 hermes computer-use doctor >/dev/null' \
-  && echo "  OK cua survived recreate" || { echo "  FAIL cua lost on recreate"; exit 1; }
 echo "[verify-persistence] PASS"

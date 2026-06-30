@@ -4,8 +4,8 @@
 # Unlike verify-gonogo / verify-e2e (which launch their OWN Chrome with
 # --remote-debugging-port + a /tmp profile to prove the *capability*), this gate
 # launches NOTHING: it verifies the entrypoint autostarted a visible Chrome that
-# answers CDP on :9222, and that CUA_DRIVER_CDP_PORT reaches login shells so
-# cua-driver's `page` tool uses CDP instead of the read-only AT-SPI fallback.
+# answers CDP on :9222 — the endpoint Hermes `/browser` attaches to
+# (hermes_cli/browser_connect.py defaults to http://127.0.0.1:9222).
 set -euo pipefail
 C="${1:-hermes-desktop}"
 U="${HERMES_USER:-hermes}"
@@ -20,9 +20,9 @@ docker exec "$C" bash -lc '
   && echo "  OK :9222 live" \
   || { echo "  FAIL :9222 not answering — entrypoint did not autostart CDP Chrome"; exit 1; }
 
-echo "[cdp] CUA_DRIVER_CDP_PORT=9222 exported to login shells"
-docker exec "$C" su - "$U" -c '[ "${CUA_DRIVER_CDP_PORT:-}" = "9222" ]' \
-  && echo "  OK CUA_DRIVER_CDP_PORT=9222" \
-  || { echo "  FAIL CUA_DRIVER_CDP_PORT not set in login shell"; exit 1; }
+echo "[cdp] CDP accepts a new target (Hermes /browser attach surface)"
+docker exec "$C" bash -lc 'curl -fsS -X PUT http://127.0.0.1:9222/json/new?about:blank >/dev/null' \
+  && echo "  OK CDP target-creation works" \
+  || { echo "  FAIL CDP did not create a target"; exit 1; }
 
 echo "[cdp] PASS"

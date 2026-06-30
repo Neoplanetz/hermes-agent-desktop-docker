@@ -5,14 +5,14 @@ C=hermes-desktop; U="${HERMES_USER:-hermes}"
 echo "[e2e] dropping volume + fresh boot…"
 docker compose down -v >/dev/null 2>&1 || true
 ./scripts/spike-up.sh >/dev/null
-echo "[e2e] waiting for first-boot cua install to complete…"
-for i in $(seq 1 120); do
-  docker exec "$C" test -f "/home/$U/.hermes/.cua-installed" 2>/dev/null && break
+echo "[e2e] waiting for :1 desktop to come up…"
+for i in $(seq 1 60); do
+  docker exec "$C" su - "$U" -c 'DISPLAY=:1 xdpyinfo >/dev/null 2>&1' && break
   sleep 2
 done
-docker exec "$C" test -f "/home/$U/.hermes/.cua-installed" \
-  || { echo "  FAIL cua-install timeout (240s)"; exit 1; }
-echo "  OK cua installed"
+docker exec "$C" su - "$U" -c 'DISPLAY=:1 xdpyinfo >/dev/null 2>&1' \
+  || { echo "  FAIL :1 never came up (120s)"; exit 1; }
+echo "  OK desktop up"
 echo "[e2e] go/no-go battery on the fresh volume"
 ./scripts/verify-gonogo.sh >/dev/null && echo "  OK battery GO" || { echo "  FAIL battery"; exit 1; }
 echo "[e2e] config + persona seeded on this fresh volume"

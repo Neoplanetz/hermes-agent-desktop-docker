@@ -4,8 +4,8 @@ set -euo pipefail
 C=hermes-desktop
 fail() { echo "  FAIL: $1"; exit 1; }
 
-echo "[1/4] hermes computer-use doctor"
-docker exec "$C" su - hermes -c 'DISPLAY=:1 hermes computer-use doctor' >/dev/null || fail "doctor"
+echo "[1/4] hermes CLI healthy (no cua-driver required)"
+docker exec "$C" su - hermes -c 'hermes --help >/dev/null 2>&1' || fail "hermes CLI"
 echo "  OK"
 
 echo "[2/4] XTest pointer injection on :1"
