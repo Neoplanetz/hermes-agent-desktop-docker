@@ -1,3 +1,5 @@
+> ⚠️ **ARCHIVED / HISTORICAL.** This document records the now-removed `computer_use` / cua-driver investigation. The shipped image provides **CDP browser automation only** (cua-driver was removed). Procedures below that reference `hermes -t computer_use chat` or `CUA_DRIVER_CDP_PORT` no longer apply — they are kept for the root-cause analysis (why native desktop input was descoped).
+
 # Computer-Use E2E Acceptance (manual, needs a model API key)
 
 Validates the one thing the automated suite can't: a model driving `computer_use`

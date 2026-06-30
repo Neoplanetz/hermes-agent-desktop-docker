@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# CDP browser leg — assert the RUNTIME wired it up, not the test.
+# Validates the CDP endpoint that Hermes `/browser` attaches to — NOT the full
+# `/browser` agent flow (which needs a model key).
 #
 # Unlike verify-gonogo / verify-e2e (which launch their OWN Chrome with
 # --remote-debugging-port + a /tmp profile to prove the *capability*), this gate
@@ -19,6 +20,11 @@ docker exec "$C" bash -lc '
   exit 1' \
   && echo "  OK :9222 live" \
   || { echo "  FAIL :9222 not answering — entrypoint did not autostart CDP Chrome"; exit 1; }
+
+echo "[cdp] :9222 is loopback-bound (not 0.0.0.0/::)"
+docker exec "$C" bash -lc "ss -ltnH 'sport = :9222' | grep -qE '127\.0\.0\.1:9222' && ! ss -ltnH 'sport = :9222' | grep -qE '0\.0\.0\.0:9222|\[::\]:9222'" \
+  && echo "  OK loopback-only" \
+  || { echo "  FAIL :9222 not loopback-only"; exit 1; }
 
 echo "[cdp] CDP accepts a new target (Hermes /browser attach surface)"
 docker exec "$C" bash -lc 'curl -fsS -X PUT "http://127.0.0.1:9222/json/new?about:blank" >/dev/null' \

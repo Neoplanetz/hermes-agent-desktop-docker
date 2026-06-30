@@ -7,4 +7,7 @@ docker exec "$C" su - "$U" -c 'test -f ~/.hermes/config.yaml && test -f ~/.herme
 echo "[verify-config-seed] image seed pins no model (left for runtime)?"
 docker exec "$C" bash -c 'grep -qiE "model:|provider:" /opt/hermes-defaults/.hermes/config.yaml' \
   && { echo "  FAIL model pinned in image seed"; exit 1; } || echo "  OK model unset in image seed"
+echo "[verify-config-seed] image seed has no computer_use/cua re-introduced?"
+docker exec "$C" su - "$U" -c 'grep -qiE "computer_use|computer-use|cua|CUA_DRIVER" /opt/hermes-defaults/.hermes/config.yaml' \
+  && { echo "  FAIL cua/computer_use back in image seed"; exit 1; } || echo "  OK seed clean"
 echo "[verify-config-seed] PASS"

@@ -23,5 +23,5 @@ docker exec "$C" su - "$U" -c \
   'DISPLAY=:1 setsid google-chrome-stable --remote-debugging-port=9222 --user-data-dir=/tmp/e2e about:blank >/dev/null 2>&1 &' || true
 sleep 4
 docker exec "$C" bash -lc 'curl -fsS http://127.0.0.1:9222/json/version >/dev/null' \
-  && echo "  OK CDP endpoint live (agent-browser /browser connect target)" || { echo "  FAIL CDP"; exit 1; }
+  && echo "  OK CDP endpoint live (confirms the surface /browser attaches to — not a full /browser agent run)" || { echo "  FAIL CDP"; exit 1; }
 echo "[e2e] PASS (automated; model-in-the-loop step is docs/E2E-ACCEPTANCE.md)"

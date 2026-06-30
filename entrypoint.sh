@@ -178,9 +178,10 @@ chown -R "$USER:$USER" "/home/$USER/.hermes"
 # is mandatory (a default-profile launch silently brings up no CDP socket).
 # Backgrounded and NOT supervised — if it dies the desktop stays up, and relaunch
 # is idempotent (same profile dir → reuses the running instance, no port rebind).
-CDP_PROFILE="/home/$USER/.config/google-chrome-cua"
+# --remote-allow-origins=* is required for the CDP websocket handshake on Chrome 136+, and is safe because CDP is bound to loopback (--remote-debugging-address=127.0.0.1) — only local clients can reach it.
+CDP_PROFILE="/home/$USER/.config/google-chrome-cdp"
 su - "$USER" -c "mkdir -p '$CDP_PROFILE' && rm -f '$CDP_PROFILE'/Singleton* && DISPLAY=:1 setsid google-chrome-stable \
-  --remote-debugging-port=9222 --remote-allow-origins=* \
+  --remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 --remote-allow-origins=* \
   --user-data-dir='$CDP_PROFILE' --no-first-run --no-default-browser-check \
   about:blank >/dev/null 2>&1 &" || true
 echo "Visible CDP browser launching on :1 (CDP endpoint 127.0.0.1:9222)"

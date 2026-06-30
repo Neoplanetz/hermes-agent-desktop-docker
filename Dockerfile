@@ -47,7 +47,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get autoremove -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Browser with a --no-sandbox `google-chrome-stable` wrapper (CDP/computer-use).
+# Browser with a --no-sandbox `google-chrome-stable` wrapper (CDP).
 # amd64: Google Chrome (.deb). arm64: Chromium from the xtradeb PPA — Google
 # Chrome ships no arm64 Linux build and Ubuntu 24.04's `chromium` is a snap
 # (unusable in a container). The wrapper name is identical on both arches, so
@@ -120,5 +120,5 @@ RUN chmod 0644 /etc/profile.d/hermes-dbus.sh
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-EXPOSE 6080 5901 9222 3389 9119
+EXPOSE 6080 5901 3389 9119
 ENTRYPOINT ["/entrypoint.sh"]
