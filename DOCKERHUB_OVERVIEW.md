@@ -10,6 +10,12 @@ pre-installed for **secure browser automation**: a CDP-enabled Chrome runs on
 the `:1` display and Hermes' `/browser` drives it, while you watch and steer over
 the web (NoVNC), VNC, or RDP. Runs with **no extra privilege** (`docker compose up`).
 
+> 🔰 **New to Docker or AI agents?** Follow the step-by-step beginner's guide — no prior experience needed:
+> [🇺🇸 English](https://github.com/Neoplanetz/hermes-agent-desktop-docker/blob/main/docs/GUIDE_FOR_BEGINNERS.md) ·
+> [🇰🇷 한국어](https://github.com/Neoplanetz/hermes-agent-desktop-docker/blob/main/docs/GUIDE_FOR_BEGINNERS.ko.md) ·
+> [🇨🇳 中文](https://github.com/Neoplanetz/hermes-agent-desktop-docker/blob/main/docs/GUIDE_FOR_BEGINNERS.zh.md) ·
+> [🇯🇵 日本語](https://github.com/Neoplanetz/hermes-agent-desktop-docker/blob/main/docs/GUIDE_FOR_BEGINNERS.ja.md)
+
 ## Architecture
 
 <p align="center">
