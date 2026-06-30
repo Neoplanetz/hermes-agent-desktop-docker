@@ -25,15 +25,25 @@ IMG="${IMG:-}"
 MODE="build"; [ -n "$IMG" ] && MODE="pull-image"
 echo "[verify-all] mode=$MODE${IMG:+ image=$IMG}"
 
+# Always tear down on ANY exit — success, a gate failure, OR an early boot/health
+# failure — so a failed run never leaves the container or the hermes-home volume
+# behind (the workflows also add an always() teardown as defense-in-depth).
+teardown() { echo; echo "[verify-all] tearing down (docker compose down -v)"; docker compose down -v >/dev/null 2>&1 || true; }
+trap teardown EXIT
+fail() { echo "[verify-all] FAIL: $1"; exit 1; }
+
 # ---- boot ----------------------------------------------------------------
+# Each boot command is checked: a failure must NOT fall through to the health/gate
+# loop (no `set -e`). In pull-image mode this is load-bearing — if the requested IMG
+# can't be pulled, a stale hermes-desktop:latest must not be silently verified instead.
 if [ "$MODE" = "pull-image" ]; then
   echo "[verify-all] pulling $IMG -> tagging hermes-desktop:latest"
-  docker pull "$IMG"
-  docker tag "$IMG" hermes-desktop:latest
-  docker compose up -d --no-build
+  docker pull "$IMG"                      || fail "docker pull $IMG (refusing to verify a stale image)"
+  docker tag "$IMG" hermes-desktop:latest || fail "docker tag $IMG hermes-desktop:latest"
+  docker compose up -d --no-build         || fail "docker compose up -d --no-build"
 else
   echo "[verify-all] building image from source"
-  docker compose up -d --build
+  docker compose up -d --build            || fail "docker compose up -d --build"
 fi
 
 # ---- wait for the compose healthcheck to report healthy ------------------
@@ -85,10 +95,7 @@ if [ -z "$failed" ]; then
   fi
 fi
 
-# ---- teardown ------------------------------------------------------------
-echo; echo "[verify-all] tearing down (docker compose down -v)"
-docker compose down -v >/dev/null 2>&1 || true
-
+# Verdict (the EXIT trap runs `docker compose down -v` after this, on every path).
 if [ -n "$failed" ]; then
   echo "[verify-all] FAIL at gate: verify-$failed"
   exit 1
