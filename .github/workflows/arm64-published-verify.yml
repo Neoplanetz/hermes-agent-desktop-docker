@@ -16,8 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Published image tag to verify'
-        default: '1.1.0'
+        description: 'Published image tag to verify (blank = the TAG env default)'
         required: false
 
 permissions:
@@ -26,6 +25,7 @@ permissions:
 
 env:
   IMAGE: neoplanetz/hermes-desktop-docker
+  TAG: '1.1.0'
 
 jobs:
   verify-arm64:
@@ -36,10 +36,12 @@ jobs:
 
       - name: Resolve tag
         id: tag
-        run: echo "tag=${{ github.event.inputs.tag || '1.1.0' }}" >> "$GITHUB_OUTPUT"
+        run: echo "tag=${{ github.event.inputs.tag || env.TAG }}" >> "$GITHUB_OUTPUT"
 
       - name: Verify published arm64 image (pull-image mode)
-        run: IMG="${IMAGE}:${{ steps.tag.outputs.tag }}" ./scripts/verify-all.sh
+        env:
+          IMG_REF: ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
+        run: IMG="$IMG_REF" ./scripts/verify-all.sh
 
       - name: Tear down (always)
         if: always()
