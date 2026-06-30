@@ -1,4 +1,9 @@
+# syntax=docker/dockerfile:1
 # Hermes Agent Desktop
+# (The syntax directive pins a heredoc-capable Dockerfile frontend so the
+#  /etc/profile.d/hermes-dbus.sh heredoc below parses on any BuildKit — without
+#  it, a runner's older built-in frontend misreads the heredoc body as
+#  instructions: "unknown instruction: if".)
 FROM ubuntu:24.04
 LABEL org.opencontainers.image.title="Hermes Agent Desktop"
 ENV DEBIAN_FRONTEND=noninteractive \
