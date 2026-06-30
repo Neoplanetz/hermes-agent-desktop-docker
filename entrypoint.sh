@@ -54,7 +54,10 @@ chown -R "$USER:$USER" "/home/$USER"
 # That creation was removed, but existing volumes still carry the file and xstartup
 # sources it unconditionally, re-injecting dead a11y env. Nuke it only if it contains
 # the known a11y markers so a user-customised .xprofile is never touched.
-su - "$USER" -c 'if [ -f ~/.xprofile ] && grep -qE "atk-bridge|NO_AT_BRIDGE|QT_ACCESSIBILITY" ~/.xprofile; then rm -f ~/.xprofile; fi'
+su - "$USER" -c 'if [ -f ~/.xprofile ]; then
+  sed -i -E "/^export GTK_MODULES=atk-bridge$/d; /^export QT_ACCESSIBILITY=1$/d; /^export NO_AT_BRIDGE=0$/d; /^export OOO_FORCE_DESKTOP=gnome$/d" ~/.xprofile
+  grep -qE "[^[:space:]]" ~/.xprofile || rm -f ~/.xprofile
+fi'
 
 # ── Desktop shortcuts — place + trust (only the known Hermes launchers; injection-safe) ──
 DESKTOP_DIR="/home/$USER/Desktop"

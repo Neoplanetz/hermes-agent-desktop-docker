@@ -5,7 +5,7 @@
 set -euo pipefail
 C=hermes-desktop
 echo "[verify-quiet-boot] at-spi2-core package absent?"
-docker exec "$C" sh -c 'dpkg-query -W -f="${Status}" at-spi2-core 2>/dev/null | grep -q "install ok installed"' \
+docker exec "$C" dpkg-query -W -f='${Status}' at-spi2-core 2>/dev/null | grep -q "install ok installed" \
   && { echo "  FAIL at-spi2-core still installed"; exit 1; } || echo "  OK at-spi2-core absent"
 echo "[verify-quiet-boot] at-spi-bus-launcher not running?"
 docker exec "$C" pgrep -x at-spi-bus-launcher >/dev/null 2>&1 \
