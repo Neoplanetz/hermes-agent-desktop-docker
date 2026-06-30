@@ -4,7 +4,7 @@
 #  /etc/profile.d/hermes-dbus.sh heredoc below parses on any BuildKit — without
 #  it, a runner's older built-in frontend misreads the heredoc body as
 #  instructions: "unknown instruction: if".)
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 LABEL org.opencontainers.image.title="Hermes Agent Desktop"
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=Asia/Seoul \
