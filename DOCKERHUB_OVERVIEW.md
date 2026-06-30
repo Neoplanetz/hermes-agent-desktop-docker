@@ -16,6 +16,43 @@ the web (NoVNC), VNC, or RDP. Runs with **no extra privilege** (`docker compose 
   <img src="https://raw.githubusercontent.com/Neoplanetz/hermes-agent-desktop-docker/main/assets/architecture_en.svg" width="720" alt="Hermes Agent Desktop architecture" />
 </p>
 
+## What's Included
+
+| Component | Details |
+|---|---|
+| **Base OS** | Ubuntu 24.04 |
+| **Desktop** | XFCE4 with CJK + emoji fonts |
+| **Remote access** | TigerVNC + NoVNC (web), xRDP (Remote Desktop), raw VNC — all converge on the same `:1` desktop |
+| **Browser automation** | CDP-enabled Chrome (amd64) / Chromium (arm64), driven by Hermes `/browser` over CDP `127.0.0.1:9222` (in-container only) |
+| **Hermes Agent** | Pre-installed & pinned; config pre-seeded; model/provider unset (set at runtime) |
+| **Dashboard** | Web dashboard on `:9119` — Status, Chat (TUI), Config, API Keys, Sessions, Skills, MCP, Logs, Cron, Channels (login required) |
+| **Desktop shortcuts** | Hermes Setup, Hermes Dashboard, Hermes Terminal |
+| **Privilege** | Runs with **no extra privilege**; CDP bound to loopback; scrypt-hashed dashboard auth |
+
+## Bundled Versions
+
+| Package | Version |
+|---|---|
+| **Hermes Agent** | `v0.17.0` (2026.6.19) — pinned commit `dd0e4ab` |
+| **Ubuntu** | `24.04.4 LTS` |
+| **XFCE4** | `4.18.3` |
+| **Google Chrome** (amd64) | `149.0.7827.200` |
+| **Chromium** (arm64) | latest from `ppa:xtradeb/apps` |
+| **Node.js** | `v22.23.1` |
+| **Python** | `3.12.3` |
+| **TigerVNC** | `1.13.1` |
+| **noVNC** / **websockify** | `1.3.0` / `0.10.0` |
+| **xRDP** | `0.9.24` |
+
+## Supported Architectures
+
+| Platform | Browser | Status |
+|---|---|---|
+| `linux/amd64` | Google Chrome stable (CDP) | ✅ verified in CI |
+| `linux/arm64` | Chromium from `ppa:xtradeb/apps` (CDP) | ✅ native-arm64 CDP verified in CI |
+
+`docker pull` auto-selects the variant for your CPU via the multi-arch manifest.
+
 ## Quick start (Docker Compose)
 
 **1. Create `compose.yaml`:**
@@ -151,4 +188,10 @@ Default credentials are `hermes` / `hermes123` —
 
 ## Ports
 
-`6080` NoVNC · `5901` VNC · `3390→3389` RDP · `9119` dashboard · `9222` CDP (in-container).
+| Port | Service |
+|---|---|
+| `6080` | NoVNC — web desktop (`/vnc.html`) |
+| `5901` | VNC — direct client |
+| `3390` → `3389` | RDP — Remote Desktop / Remmina (host `3390` → container `3389`) |
+| `9119` | Hermes web dashboard |
+| `9222` | Chrome DevTools / CDP — **in-container only, not published** |

@@ -1,5 +1,12 @@
 # Hermes Agent Desktop Docker
 
+🌐 [English](README.md) | [한국어](README.ko.md) | [中文](README.zh.md) | [日本語](README.ja.md)
+
+![Docker Pulls](https://img.shields.io/docker/pulls/neoplanetz/hermes-desktop-docker)
+![Image Size](https://img.shields.io/docker/image-size/neoplanetz/hermes-desktop-docker/latest)
+![Version](https://img.shields.io/docker/v/neoplanetz/hermes-desktop-docker?sort=semver)
+![Platforms](https://img.shields.io/badge/platforms-linux%2Famd64%20%7C%20linux%2Farm64-blue)
+
 A turnkey Ubuntu 24.04 + XFCE4 desktop with **Hermes Agent** (Nous Research)
 pre-installed for **secure browser automation**: a CDP-enabled Chrome runs on
 the `:1` display and Hermes' `/browser` drives it, while you watch and steer over
@@ -11,6 +18,53 @@ the web (NoVNC), VNC, or RDP. Runs with **no extra privilege** (`docker compose 
   <img src="assets/architecture_en.svg" width="720" alt="Hermes Agent Desktop architecture" />
 </p>
 
+## What's Included
+
+| Component | Details |
+|---|---|
+| **Base OS** | Ubuntu 24.04 |
+| **Desktop** | XFCE4 with CJK + emoji fonts |
+| **Remote access** | TigerVNC + NoVNC (web), xRDP (Remote Desktop), raw VNC — all converge on the same `:1` desktop |
+| **Browser automation** | CDP-enabled Chrome (amd64) / Chromium (arm64), driven by Hermes `/browser` over CDP `127.0.0.1:9222` (in-container only) |
+| **Hermes Agent** | Pre-installed & pinned; config pre-seeded; model/provider unset (set at runtime) |
+| **Dashboard** | Web dashboard on `:9119` — Status, Chat (TUI), Config, API Keys, Sessions, Skills, MCP, Logs, Cron, Channels (login required) |
+| **Desktop shortcuts** | Hermes Setup, Hermes Dashboard, Hermes Terminal |
+| **Privilege** | Runs with **no extra privilege**; CDP bound to loopback; scrypt-hashed dashboard auth |
+
+## Bundled Versions
+
+| Package | Version |
+|---|---|
+| **Hermes Agent** | `v0.17.0` (2026.6.19) — pinned commit `dd0e4ab` |
+| **Ubuntu** | `24.04.4 LTS` |
+| **XFCE4** | `4.18.3` |
+| **Google Chrome** (amd64) | `149.0.7827.200` |
+| **Chromium** (arm64) | latest from `ppa:xtradeb/apps` |
+| **Node.js** | `v22.23.1` |
+| **Python** | `3.12.3` |
+| **TigerVNC** | `1.13.1` |
+| **noVNC** / **websockify** | `1.3.0` / `0.10.0` |
+| **xRDP** | `0.9.24` |
+
+## Supported Architectures
+
+| Platform | Browser | Status |
+|---|---|---|
+| `linux/amd64` | Google Chrome stable (CDP) | ✅ verified in CI |
+| `linux/arm64` | Chromium from `ppa:xtradeb/apps` (CDP) | ✅ native-arm64 CDP verified in CI |
+
+`docker pull` auto-selects the variant for your CPU via the multi-arch manifest.
+
+## Ports
+
+| Port | Service |
+|---|---|
+| `6080` | NoVNC — web desktop (`/vnc.html`) |
+| `5901` | VNC — direct client |
+| `3390` → `3389` | RDP — Remote Desktop / Remmina (host `3390` → container `3389`) |
+| `9119` | Hermes web dashboard |
+| `9222` | Chrome DevTools / CDP — **in-container only, not published** |
+
 ## Quick start
 
 ```bash
@@ -21,6 +75,11 @@ docker compose up -d
 Then open the **dashboard** at <http://localhost:9119> and set a model + API key
 (Nous Portal recommended) in the API Keys tab, or run `hermes setup` from the
 "Hermes Setup" desktop shortcut.
+
+> Prefer the published image over building from source? Pull
+> `neoplanetz/hermes-desktop-docker:latest` — see the
+> [Docker Hub overview](DOCKERHUB_OVERVIEW.md) for a ready-to-use `compose.yaml`
+> and a full parameter table.
 
 ## Access
 
@@ -46,30 +105,18 @@ agent's browser actions are visible no matter how you connect
 - **Dashboard** — Status, Chat (embedded TUI), Config, API Keys, Sessions,
   Skills, MCP, Logs, Cron, Channels.
 
-## Known limitations
-
-- **Keyboard input into native GTK apps via `computer_use` is not supported (out of scope for this image)** under
-  this VNC desktop. **Root cause is the X server**, not GTK: this image runs TigerVNC
-  `Xvnc`, which exposes only its built-in VNC/XTEST input and **does not accept
-  `uinput`/`libinput` virtual input devices**. cua-driver's native Linux real-input
-  path is a `uinput` virtual device — under `Xvnc` it can't attach ("`uinput/libinput
-  pointers cannot become real X input devices`", per cua-driver's own diagnostic), so
-  it silently falls back to **XSendEvent** (synthetic events), which GTK ignores for
-  **both clicks and keystrokes**. On a normal Xorg session those uinput devices
-  register as real input and typing works — which is why upstream docs say it works,
-  and why trycua flags Linux as a *pre-release* backend. Verified corollaries: the
-  text widget *is* exposed in AT-SPI (a `text` accessible with `Text`+`EditableText`);
-  cua-driver's `get_window_state` doesn't enumerate it; and if the widget is focused
-  out-of-band via a real XTest click, cua-driver then types fine (`"path": "ax"`).
-  The **browser-automation path (CDP) works.** Full analysis + the Xvnc/uinput root
-  cause in `docs/E2E-ACCEPTANCE.md`.
-
 ## Configuration
 
 - `HERMES_USER` / `HERMES_PASSWORD` — desktop account, used for VNC/RDP and the
   dashboard login. Set in `.env`.
-- Per-user state persists in the `hermes-home` Docker volume (`~/.hermes`).
 - Model/provider are unset by default — configure at runtime in the dashboard.
+
+## Data persistence
+
+- Per-user state persists in the `hermes-home` Docker volume mounted at the user's
+  home; `~/.hermes` holds config, API keys, sessions, and skills.
+- The volume path follows `HERMES_USER` (e.g. `/home/hermes`). If you change
+  `HERMES_USER`, the home volume mounts at `/home/<user>` accordingly.
 
 ## Security
 
@@ -79,7 +126,21 @@ agent's browser actions are visible no matter how you connect
   `docker-compose.yml` and use a strong `HERMES_PASSWORD`.
 - The VNC password and dashboard auth material are generated at container start
   (mode 600, in-container only) — never baked into the image or committed.
+- The CDP port (`9222`) is bound to loopback **inside** the container and is not
+  published to the host, so the automation surface is never reachable externally.
 
-## Ports
+## Known limitations
 
-`6080` NoVNC · `5901` VNC · `3390→3389` RDP · `9119` dashboard · `9222` CDP (in-container).
+- **Keyboard/mouse input into native GTK apps via `computer_use` is not supported
+  (out of scope for this image).** Root cause is the **X server**, not GTK: this
+  image runs TigerVNC `Xvnc`, which exposes only its built-in VNC/XTEST input and
+  **does not accept `uinput`/`libinput` virtual input devices**, so cua-driver's
+  native Linux real-input path can't attach and falls back to `XSendEvent`
+  (synthetic events), which GTK ignores. The supported, secure path is
+  **browser automation over CDP**, which works. Full analysis in
+  `docs/E2E-ACCEPTANCE.md`.
+
+## License & links
+
+- Docker Hub: <https://hub.docker.com/r/neoplanetz/hermes-desktop-docker>
+- Hermes Agent (Nous Research): <https://hermes-agent.nousresearch.com>

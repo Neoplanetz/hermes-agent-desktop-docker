@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="640" viewBox="0 0 680 640">
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<style>
+  text { font-family: -apple-system, "Segoe UI", "Helvetica Neue", "Noto Sans KR", "Noto Sans JP", "Noto Sans SC", Arial, sans-serif; }
+  .th { font-size: 14px; font-weight: 500; }
+  .ts { font-size: 12px; font-weight: 400; }
+  .c-gray > rect { fill: #F1EFE8; stroke: #5F5E5A; }
+  .c-gray > .th { fill: #2C2C2A; }
+  .c-gray > .ts { fill: #5F5E5A; }
+  .c-amber > rect { fill: #FAEEDA; stroke: #854F0B; }
+  .c-amber > .th { fill: #633806; }
+  .c-amber > .ts { fill: #854F0B; }
+  .c-blue > rect { fill: #E6F1FB; stroke: #185FA5; }
+  .c-blue > .th { fill: #0C447C; }
+  .c-blue > .ts { fill: #185FA5; }
+  .c-teal > rect { fill: #E1F5EE; stroke: #0F6E56; }
+  .c-teal > .th { fill: #085041; }
+  .c-teal > .ts { fill: #0F6E56; }
+  .c-purple > rect { fill: #EEEDFE; stroke: #534AB7; }
+  .c-purple > .th { fill: #3C3489; }
+  .c-purple > .ts { fill: #534AB7; }
+  .c-green > rect { fill: #EAF3DE; stroke: #3B6D11; }
+  .c-green > .th { fill: #27500A; }
+  .c-green > .ts { fill: #3B6D11; }
+  .c-pink > rect { fill: #FBEAF0; stroke: #993556; }
+  .c-pink > .th { fill: #72243E; }
+  .c-pink > .ts { fill: #993556; }
+</style>
+
+<!-- YOUR PC -->
+<g class="c-gray">
+  <rect x="20" y="20" width="640" height="155" rx="20" stroke-width="0.5"/>
+  <text class="th" x="340" y="48" text-anchor="middle" dominant-baseline="central">내 PC</text>
+  <text class="ts" x="340" y="68" text-anchor="middle" dominant-baseline="central">Windows / macOS / Linux — Docker만 설치되어 있으면 됨</text>
+</g>
+
+<g class="c-amber">
+  <rect x="50" y="88" width="230" height="68" rx="12" stroke-width="0.5"/>
+  <text class="th" x="165" y="108" text-anchor="middle" dominant-baseline="central">hermes-home</text>
+  <text class="ts" x="165" y="126" text-anchor="middle" dominant-baseline="central">격리된 Docker 볼륨</text>
+  <text class="ts" x="165" y="142" text-anchor="middle" dominant-baseline="central">Hermes 데이터만 저장됨</text>
+</g>
+
+<g class="c-blue">
+  <rect x="310" y="88" width="120" height="68" rx="12" stroke-width="0.5"/>
+  <text class="th" x="370" y="116" text-anchor="middle" dominant-baseline="central">Docker</text>
+  <text class="ts" x="370" y="134" text-anchor="middle" dominant-baseline="central">엔진</text>
+</g>
+
+<g class="c-teal">
+  <rect x="460" y="88" width="180" height="68" rx="12" stroke-width="0.5"/>
+  <text class="th" x="550" y="112" text-anchor="middle" dominant-baseline="central">브라우저 / VNC / RDP</text>
+  <text class="ts" x="550" y="132" text-anchor="middle" dominant-baseline="central">데스크톱에 연결</text>
+</g>
+
+<!-- 4 access methods -->
+<g class="c-teal">
+  <rect x="50" y="212" width="132" height="50" rx="12" stroke-width="0.5"/>
+  <text class="th" x="116" y="230" text-anchor="middle" dominant-baseline="central">웹 데스크톱</text>
+  <text class="ts" x="116" y="248" text-anchor="middle" dominant-baseline="central">localhost:6080</text>
+</g>
+<g class="c-teal">
+  <rect x="206" y="212" width="132" height="50" rx="12" stroke-width="0.5"/>
+  <text class="th" x="272" y="230" text-anchor="middle" dominant-baseline="central">원격 데스크톱</text>
+  <text class="ts" x="272" y="248" text-anchor="middle" dominant-baseline="central">localhost:3390</text>
+</g>
+<g class="c-teal">
+  <rect x="362" y="212" width="132" height="50" rx="12" stroke-width="0.5"/>
+  <text class="th" x="428" y="230" text-anchor="middle" dominant-baseline="central">VNC 클라이언트</text>
+  <text class="ts" x="428" y="248" text-anchor="middle" dominant-baseline="central">localhost:5901</text>
+</g>
+<g class="c-blue">
+  <rect x="518" y="212" width="132" height="50" rx="12" stroke-width="0.5"/>
+  <text class="th" x="584" y="230" text-anchor="middle" dominant-baseline="central">대시보드</text>
+  <text class="ts" x="584" y="248" text-anchor="middle" dominant-baseline="central">localhost:9119</text>
+</g>
+
+<!-- Fan-out: Browser/VNC/RDP -> trunk -> horizontal bar -> 4 boxes -->
+<line x1="550" y1="156" x2="550" y2="192" stroke="#0F6E56" stroke-width="1.5"/>
+<line x1="116" y1="192" x2="584" y2="192" stroke="#0F6E56" stroke-width="1.5"/>
+<line x1="116" y1="192" x2="116" y2="210" stroke="#0F6E56" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="272" y1="192" x2="272" y2="210" stroke="#0F6E56" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="428" y1="192" x2="428" y2="210" stroke="#0F6E56" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="584" y1="192" x2="584" y2="210" stroke="#185FA5" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- Arrows: access -> container -->
+<line x1="116" y1="262" x2="116" y2="308" stroke="#0F6E56" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="272" y1="262" x2="272" y2="308" stroke="#0F6E56" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="428" y1="262" x2="428" y2="308" stroke="#0F6E56" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="584" y1="262" x2="584" y2="308" stroke="#185FA5" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- DOCKER CONTAINER -->
+<g class="c-purple">
+  <rect x="20" y="310" width="640" height="300" rx="20" stroke-width="0.5"/>
+  <text class="th" x="340" y="338" text-anchor="middle" dominant-baseline="central">Docker 컨테이너</text>
+  <text class="ts" x="340" y="356" text-anchor="middle" dominant-baseline="central">Docker 내부에서 실행되는 가상 Ubuntu 데스크톱 — 추가 권한 없음</text>
+</g>
+
+<!-- Ubuntu desktop with Chrome inside -->
+<g class="c-green">
+  <rect x="50" y="374" width="285" height="130" rx="12" stroke-width="0.5"/>
+  <text class="th" x="192" y="392" text-anchor="middle" dominant-baseline="central">Ubuntu 데스크톱 (XFCE)</text>
+  <text class="ts" x="192" y="410" text-anchor="middle" dominant-baseline="central">:1 — NoVNC / VNC / RDP로 실시간 보기</text>
+</g>
+<g class="c-teal">
+  <rect x="68" y="428" width="249" height="60" rx="10" stroke-width="0.5"/>
+  <text class="th" x="192" y="450" text-anchor="middle" dominant-baseline="central">Chrome (CDP 활성화)</text>
+  <text class="ts" x="192" y="470" text-anchor="middle" dominant-baseline="central">DevTools 127.0.0.1:9222 · 컨테이너 내부</text>
+</g>
+
+<!-- Hermes agent -->
+<g class="c-pink">
+  <rect x="355" y="374" width="285" height="64" rx="12" stroke-width="0.5"/>
+  <text class="th" x="497" y="394" text-anchor="middle" dominant-baseline="central">Hermes AI 에이전트</text>
+  <text class="ts" x="497" y="416" text-anchor="middle" dominant-baseline="central">대시보드 :9119 · CDP로 Chrome 제어</text>
+</g>
+
+<!-- Internet services -->
+<text class="ts" x="497" y="452" text-anchor="middle" fill="#534AB7">인터넷</text>
+<g class="c-pink">
+  <rect x="355" y="462" width="135" height="52" rx="12" stroke-width="0.5"/>
+  <text class="th" x="422" y="480" text-anchor="middle" dominant-baseline="central">AI 모델</text>
+  <text class="ts" x="422" y="498" text-anchor="middle" dominant-baseline="central">Nous Portal 등</text>
+</g>
+<g class="c-pink">
+  <rect x="505" y="462" width="135" height="52" rx="12" stroke-width="0.5"/>
+  <text class="th" x="572" y="480" text-anchor="middle" dominant-baseline="central">채널</text>
+  <text class="ts" x="572" y="498" text-anchor="middle" dominant-baseline="central">Telegram 등</text>
+</g>
+
+<!-- Agent -> Chrome (CDP drive) -->
+<line x1="360" y1="438" x2="360" y2="459" stroke="#993556" stroke-width="1.5"/>
+<line x1="360" y1="459" x2="319" y2="459" stroke="#993556" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- Agent -> Internet -->
+<line x1="422" y1="438" x2="422" y2="460" stroke="#993556" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="572" y1="438" x2="572" y2="460" stroke="#993556" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- Saved data -->
+<g class="c-amber">
+  <rect x="50" y="534" width="590" height="52" rx="12" stroke-width="0.5"/>
+  <text class="th" x="345" y="552" text-anchor="middle" dominant-baseline="central">저장된 데이터 (/home/hermes)</text>
+  <text class="ts" x="345" y="570" text-anchor="middle" dominant-baseline="central">설정 · API 키 · 세션 · 스킬 (~/.hermes)</text>
+</g>
+
+<!-- Volume mount: L-shaped bypass -->
+<path d="M50 122 L35 122 L35 560 L48 560" fill="none" stroke="#854F0B" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<text class="ts" x="42" y="514" text-anchor="start" fill="#854F0B">볼륨 마운트</text>
+
+</svg>
