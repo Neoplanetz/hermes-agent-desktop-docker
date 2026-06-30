@@ -20,7 +20,7 @@ Copied verbatim from the spec — every task implicitly includes these:
 - **Agent runs as an unprivileged user** (`hermes`, uid 1000), never root.
 - **`computer_use` requires:** `DISPLAY=:1` + `XAUTHORITY` reachable, AT-SPI bus up, XTest on the X server. Mechanism: AT-SPI accessibility tree + synthesized XTest input.
 - **No secrets baked.** The go/no-go gate must pass **without** any model API key (doctor + direct XTest/AT-SPI/CDP probes, not a model-driven action).
-- **Repo location (default, user may redirect before execution):** new sibling repo at `/home/neoplanetz/Documents/github/hermes-agent-desktop-docker`. This plan document stays in the OpenClaw repo alongside the spec; the spike *code* lives in the new repo.
+- **Repo location (default, user may redirect before execution):** new sibling repo at `hermes-agent-desktop-docker`. This plan document stays in the OpenClaw repo alongside the spec; the spike *code* lives in the new repo.
 
 ## Go/No-Go criterion (what this whole phase decides)
 
@@ -52,8 +52,8 @@ Copied verbatim from the spec — every task implicitly includes these:
 - [ ] **Step 1: Scaffold the new repo**
 
 ```bash
-mkdir -p /home/neoplanetz/Documents/github/hermes-agent-desktop-docker/scripts
-cd /home/neoplanetz/Documents/github/hermes-agent-desktop-docker
+mkdir -p hermes-agent-desktop-docker/scripts
+cd hermes-agent-desktop-docker
 git init
 printf 'node_modules/\n*.log\n.env\n' > .gitignore
 printf '.git\nscripts/\n*.md\n' > .dockerignore

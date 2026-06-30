@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Repo: `/home/neoplanetz/Documents/github/hermes-agent-desktop-docker`. Work on a branch/worktree (not directly on `main`) created at execution time.
+- Repo: `hermes-agent-desktop-docker`. Work on a branch/worktree (not directly on `main`) created at execution time.
 - **Do not disturb** the running `hermes-desktop` container or the published Docker Hub `:latest` until the candidate image is verified (Task 4). Build candidates to tag `hermes-desktop:cdp-test`; test in a container named `hermes-cdp-test` on alternate loopback ports.
 - **Keep** the visible CDP Chrome autostart on `:1` (entrypoint) and the Chrome `--no-sandbox` wrapper (Dockerfile). Hermes `/browser` attaches to it.
 - Product docs (README.md, DOCKERHUB_OVERVIEW.md, docs/E2E-ACCEPTANCE.md) are pushed; planning docs under `docs/superpowers/` are committed locally, **not pushed**.

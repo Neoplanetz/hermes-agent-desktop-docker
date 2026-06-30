@@ -6,7 +6,7 @@
 
 **Goal:** Turn the validated Phase-1 spike into a **persistent, env-configurable** Hermes desktop — a named home volume that survives container recreate, first-boot seeding of `~/.hermes` config + persona, user/password from `.env` — and close the two gaps the spike deliberately skipped by validating the **model-in-the-loop `computer_use` loop on a fresh named volume**.
 
-**Architecture:** Build directly on the spike repo `/home/neoplanetz/Documents/github/hermes-agent-desktop-docker` (`main`, currently at `3c8f0bb`). Port the proven OpenClaw Desktop Docker patterns — input validation, dynamic user creation, `/opt/*-defaults` home template copied on first boot (the volume-shadow fix), idempotent config seeding — adapting OpenClaw's npm/JSON specifics to Hermes' Python/`~/.hermes` layout. Each task keeps the spike's TDD-style cycle: write a `scripts/verify-*.sh` → run/fail → implement → rebuild → pass → commit.
+**Architecture:** Build directly on the spike repo `hermes-agent-desktop-docker` (`main`, currently at `3c8f0bb`). Port the proven OpenClaw Desktop Docker patterns — input validation, dynamic user creation, `/opt/*-defaults` home template copied on first boot (the volume-shadow fix), idempotent config seeding — adapting OpenClaw's npm/JSON specifics to Hermes' Python/`~/.hermes` layout. Each task keeps the spike's TDD-style cycle: write a `scripts/verify-*.sh` → run/fail → implement → rebuild → pass → commit.
 
 **Tech Stack:** Docker (linux/amd64), Ubuntu 24.04, XFCE4, TigerVNC `Xvnc :1`, NoVNC, Hermes Agent (Python/uv), cua-driver, named Docker volume.
 
