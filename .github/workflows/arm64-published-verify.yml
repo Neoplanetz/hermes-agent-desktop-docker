@@ -36,7 +36,9 @@ jobs:
 
       - name: Resolve tag
         id: tag
-        run: echo "tag=${{ github.event.inputs.tag || env.TAG }}" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: echo "tag=${INPUT_TAG:-$TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Verify published arm64 image (pull-image mode)
         env:
