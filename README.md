@@ -5,6 +5,12 @@ pre-installed for **secure browser automation**: a CDP-enabled Chrome runs on
 the `:1` display and Hermes' `/browser` drives it, while you watch and steer over
 the web (NoVNC), VNC, or RDP. Runs with **no extra privilege** (`docker compose up`).
 
+## Architecture
+
+<p align="center">
+  <img src="assets/architecture_en.svg" width="720" alt="Hermes Agent Desktop architecture" />
+</p>
+
 ## Quick start
 
 ```bash
