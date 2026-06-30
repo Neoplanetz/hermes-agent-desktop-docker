@@ -4,8 +4,8 @@
 set -euo pipefail
 C=hermes-desktop
 echo "[verify-rdp-converge] libvnc module present?"
-docker exec "$C" bash -c 'ls /usr/lib/xrdp/libvnc.so >/dev/null 2>&1 || ls /usr/lib/x86_64-linux-gnu/xrdp/libvnc.so >/dev/null 2>&1' \
-  && echo "  OK libvnc.so" || { echo "  FAIL libvnc.so missing"; exit 1; }
+docker exec "$C" bash -c '[ -f /usr/lib/xrdp/libvnc.so ] || [ -f /usr/lib/x86_64-linux-gnu/xrdp/libvnc.so ] || [ -f /usr/lib/aarch64-linux-gnu/xrdp/libvnc.so ]' \
+  && echo "  OK libvnc.so" || { echo "  FAIL libvnc.so missing (checked generic + x86_64 + aarch64 xrdp paths)"; exit 1; }
 echo "[verify-rdp-converge] [Hermes] section present in xrdp.ini?"
 docker exec "$C" bash -c 'grep -q "^\[Hermes\]" /etc/xrdp/xrdp.ini' \
   && echo "  OK [Hermes] section found" || { echo "  FAIL [Hermes] section missing"; exit 1; }
