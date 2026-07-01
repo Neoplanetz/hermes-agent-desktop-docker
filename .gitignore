@@ -1,3 +1,7 @@
 node_modules/
 *.log
 .env
+
+# Trivy scan artifacts written by scripts/scan-image.sh (repo root)
+trivy.json
+trivy.sarif
