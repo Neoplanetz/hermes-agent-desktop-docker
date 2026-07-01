@@ -20,6 +20,15 @@ Hermes 的 `/browser` 驱动，同时你可以通过网页（NoVNC）、VNC 或 
   <img src="assets/architecture_zh.svg" width="720" alt="Hermes Agent Desktop 架构" />
 </p>
 
+## 实际运行效果
+
+通过仅回环的 Chrome DevTools Protocol 驱动的内置 Chrome，以及内建的 Hermes 仪表板 — 都在你所连接的同一桌面上通过 NoVNC/RDP 查看与管理。
+
+<p align="center">
+  <img src="assets/demo-browser-cdp.png" width="48%" alt="通过 DevTools Protocol 驱动的 Chrome 实时页面" />
+  <img src="assets/demo-dashboard.png" width="48%" alt="受身份验证保护的 Hermes Agent 仪表板" />
+</p>
+
 ## 包含内容
 
 | 组件 | 详情 |

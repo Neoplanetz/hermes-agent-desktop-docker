@@ -17,6 +17,15 @@
   <img src="assets/architecture_ja.svg" width="720" alt="Hermes Agent Desktop アーキテクチャ" />
 </p>
 
+## 実際の動作
+
+ループバック専用の Chrome DevTools Protocol で操作されるバンドル Chrome と、組み込みの Hermes ダッシュボード — 接続するのと同じデスクトップ上で NoVNC/RDP から確認・管理できます。
+
+<p align="center">
+  <img src="assets/demo-browser-cdp.png" width="48%" alt="DevTools Protocol で操作される Chrome の実ページ" />
+  <img src="assets/demo-dashboard.png" width="48%" alt="認証で保護された Hermes Agent ダッシュボード" />
+</p>
+
 ## 含まれるもの
 
 | コンポーネント | 詳細 |

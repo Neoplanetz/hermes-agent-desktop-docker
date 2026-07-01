@@ -20,6 +20,15 @@ the web (NoVNC), VNC, or RDP. Runs with **no extra privilege** (`docker compose 
   <img src="assets/architecture_en.svg" width="720" alt="Hermes Agent Desktop architecture" />
 </p>
 
+## See it in action
+
+The bundled Chrome, driven over the Chrome DevTools Protocol (loopback-only), and the built-in Hermes dashboard — both watched and managed over NoVNC/RDP on the same desktop you connect to.
+
+<p align="center">
+  <img src="assets/demo-browser-cdp.png" width="48%" alt="Chrome driven over the DevTools Protocol on a live page" />
+  <img src="assets/demo-dashboard.png" width="48%" alt="The auth-secured Hermes Agent dashboard" />
+</p>
+
 ## What's Included
 
 | Component | Details |

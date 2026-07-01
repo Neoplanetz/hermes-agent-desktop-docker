@@ -20,6 +20,15 @@ Hermes의 `/browser`가 이를 제어하며, 그동안 사용자는 웹(NoVNC), 
   <img src="assets/architecture_ko.svg" width="720" alt="Hermes Agent 데스크톱 아키텍처" />
 </p>
 
+## 실제 동작 보기
+
+루프백 전용 Chrome DevTools Protocol로 구동되는 번들 Chrome과 내장 Hermes 대시보드 — 접속하는 바로 그 데스크톱에서 NoVNC/RDP로 함께 확인·관리합니다.
+
+<p align="center">
+  <img src="assets/demo-browser-cdp.png" width="48%" alt="DevTools Protocol로 구동되는 Chrome의 실제 페이지" />
+  <img src="assets/demo-dashboard.png" width="48%" alt="인증 보호되는 Hermes Agent 대시보드" />
+</p>
+
 ## 포함 사항
 
 | 구성 요소 | 세부 정보 |
