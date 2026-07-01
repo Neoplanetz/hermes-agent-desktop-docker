@@ -28,6 +28,12 @@ env:
   IMAGE: neoplanetz/hermes-desktop-docker
   TAG: 'latest'
 
+# Serialize runs so the issue de-dup (list-then-create) can't race — e.g. a
+# manual dispatch overlapping the weekly schedule. Queue, don't cancel.
+concurrency:
+  group: published-image-scan
+  cancel-in-progress: false
+
 jobs:
   scan-published:
     runs-on: ubuntu-latest
@@ -44,7 +50,15 @@ jobs:
         id: tag
         env:
           INPUT_TAG: ${{ github.event.inputs.tag }}
-        run: echo "tag=${INPUT_TAG:-$TAG}" >> "$GITHUB_OUTPUT"
+        run: |
+          tag="${INPUT_TAG:-$TAG}"
+          # validate against Docker tag syntax (rejects spaces/newlines/odd chars,
+          # so a hand-typed dispatch input can't forge an image ref or a $GITHUB_OUTPUT line)
+          if [[ ! "$tag" =~ ^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$ ]]; then
+            echo "invalid image tag: '$tag' (expected Docker tag syntax)" >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Scan the published image
         id: scan
@@ -55,7 +69,7 @@ jobs:
           ./scripts/scan-image.sh "$IMG_REF" | tee "$RUNNER_TEMP/scan.log"
 
       - name: Open a de-duplicated issue on a fixable CRITICAL
-        if: failure()
+        if: ${{ failure() && steps.scan.outcome == 'failure' }}
         env:
           GH_TOKEN: ${{ github.token }}
           IMG_REF: ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
