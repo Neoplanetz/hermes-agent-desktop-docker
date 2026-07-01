@@ -1,8 +1,13 @@
-# CI: build the image from source and run the full verify-*.sh gate suite (amd64).
+# CI: build the image from source and run the full verify-*.sh gate suite (amd64),
+# then scan the built image for vulnerabilities with Trivy.
 #
 # Triggers: pull_request -> main, push -> main, manual (workflow_dispatch)
 # Runner:   ubuntu-latest (amd64)
 # Secrets:  none (build-from-source; no registry, no push)
+# Perms:    contents:read + security-events:write (upload the Trivy SARIF to code
+#           scanning). Fork/Dependabot PRs run read-only, so the SARIF upload is
+#           best-effort (continue-on-error); push->main is the code-scanning source
+#           of truth. See docs/superpowers/specs/2026-07-01-image-security-scan-design.md.
 #
 # The ~6 GB image build dominates runtime; a cold build is acceptable at this
 # repo's PR volume (build caching is an optional optimization, see
@@ -18,6 +23,7 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   verify:
@@ -28,6 +34,34 @@ jobs:
 
       - name: Run full verify-gate suite (build mode)
         run: ./scripts/verify-all.sh
+
+      - name: Check image was built
+        id: img
+        if: always()
+        run: |
+          if docker image inspect hermes-desktop:latest >/dev/null 2>&1; then
+            echo "built=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "built=false" >> "$GITHUB_OUTPUT"
+            echo "image hermes-desktop:latest absent (build failed); skipping scan"
+          fi
+
+      - name: Install Trivy
+        if: always() && steps.img.outputs.built == 'true'
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          version: v0.72.0
+
+      - name: Scan image + gate on fixable CRITICAL
+        if: always() && steps.img.outputs.built == 'true'
+        run: ./scripts/scan-image.sh hermes-desktop:latest
+
+      - name: Upload Trivy SARIF to code scanning
+        if: always() && steps.img.outputs.built == 'true'
+        continue-on-error: true   # fork/Dependabot PRs are read-only; push->main is authoritative
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
 
       - name: Tear down (always)
         if: always()
