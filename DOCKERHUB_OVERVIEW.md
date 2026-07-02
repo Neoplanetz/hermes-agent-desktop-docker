@@ -116,6 +116,19 @@ docker compose up -d
 in the API Keys tab (Nous Portal recommended), or run `hermes setup` from the
 "Hermes Setup" desktop shortcut.
 
+### Verify (cosign)
+
+Releases are keyless-signed with an SBOM + SLSA provenance attestation:
+
+```bash
+IMAGE=neoplanetz/hermes-desktop-docker:latest
+ID='^https://github\.com/Neoplanetz/hermes-agent-desktop-docker/\.github/workflows/release\.yml@refs/tags/v'
+IS=https://token.actions.githubusercontent.com
+cosign verify "$IMAGE" --certificate-identity-regexp "$ID" --certificate-oidc-issuer "$IS"
+```
+
+Full instructions (SBOM + provenance): see "Verifying the image" in the repo README.
+
 ### Compose parameters
 
 | Field | Value | What it does |

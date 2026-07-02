@@ -145,6 +145,22 @@ docker compose up -d
   事件。受支持且安全的路径是**通过 CDP 的浏览器自动化**，它可以正常工作。完整分析见
   `docs/E2E-ACCEPTANCE.md`。
 
+## 验证镜像
+
+每个 `vX.Y.Z` 版本都在 GitHub Actions 中构建并使用 **cosign 无密钥签名**（Sigstore），并附带 SPDX **SBOM** 和 **SLSA 来源证明**。运行前请先验证（需要 [cosign](https://docs.sigstore.dev/cosign/installation/)）:
+
+```bash
+IMAGE=neoplanetz/hermes-desktop-docker:latest
+IDENTITY='^https://github\.com/Neoplanetz/hermes-agent-desktop-docker/\.github/workflows/release\.yml@refs/tags/v'
+ISSUER=https://token.actions.githubusercontent.com
+
+cosign verify              "$IMAGE" --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+cosign verify-attestation  "$IMAGE" --type spdxjson       --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+cosign verify-attestation  "$IMAGE" --type slsaprovenance1 --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+```
+
+`cosign verify` 成功即表示签名已验证；两个 `verify-attestation` 确认 SBOM 与来源证明由本仓库的发布工作流签名。
+
 ## 许可与链接
 
 本仓库（Dockerfile、脚本、配置、文档）依据 **[MIT 许可证](LICENSE)** 发布。

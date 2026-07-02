@@ -149,3 +149,11 @@ the RDP→`:1`/dashboard/persistence topology has to be re-wired off `Xvnc`. The
 lighter alternative is the verified **focus-assist** workaround (XTest click to focus,
 which works because XTEST is present on Xvnc) — narrower (GUI editors only), no
 `/dev/uinput` needed.
+
+---
+
+## Signed release pipeline (release.yml)
+
+- [ ] **dry_run** — `gh workflow run "Release (build, push, sign, attest)" --ref <branch> -f version=1.1.1-rc1 -f dry_run=true` → builds both arches, merges, Trivy gate passes; **no signing, no public tag**.
+- [ ] **pre-release** — push `v1.1.1-rc1` → run green; `cosign verify` + `verify-attestation --type spdxjson` + `--type slsaprovenance1` all succeed; `:1.1.1-rc1` exists and **`:latest` is unchanged**.
+- [ ] **release** — push `v1.1.1` → `:1.1.1` and `:latest` resolve to the **same signed** digest; all three cosign checks pass.

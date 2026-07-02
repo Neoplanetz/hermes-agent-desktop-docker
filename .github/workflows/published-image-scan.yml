@@ -86,7 +86,7 @@ jobs:
           if grep -q '\[scan-image\] FAIL:' "$RUNNER_TEMP/scan.log" 2>/dev/null; then
             detail=$(sed -n '/\[scan-image\] FAIL:/,/Remediate:/p' "$RUNNER_TEMP/scan.log")
             title="Published image has a fixable CRITICAL (${IMG_REF})"
-            intro="The scheduled Trivy scan of the published image \`${IMG_REF}\` found a CRITICAL vulnerability with a fix available. Rebuild from current source and republish (manual \`buildx\` flow), or add a justified \`.trivyignore\` entry."
+            intro="The scheduled Trivy scan of the published image \`${IMG_REF}\` found a CRITICAL vulnerability with a fix available. Rebuild + republish by pushing a \`vX.Y.Z\` git tag (the release workflow rebuilds, signs, and attests), or add a justified \`.trivyignore\` entry."
           else
             detail=$(tail -n 30 "$RUNNER_TEMP/scan.log" 2>/dev/null || echo '(no scan log captured)')
             title="Published-image scan did not complete (${IMG_REF})"

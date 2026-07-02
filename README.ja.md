@@ -121,6 +121,22 @@ docker compose up -d
 
 - **`computer_use` による、ネイティブ GTK アプリへのキーボード/マウス入力はサポートされていません（このイメージの対象外です）。** 根本原因は GTK ではなく **X サーバー**です。このイメージは TigerVNC `Xvnc` を実行しており、これは組み込みの VNC/XTEST 入力のみを公開し、**`uinput`/`libinput` の仮想入力デバイスを受け付けません**。そのため cua-driver のネイティブ Linux 実入力パスは接続できず、`XSendEvent`（合成イベント）にフォールバックしますが、これは GTK が無視します。サポートされている安全な経路は **CDP 経由のブラウザ自動化**であり、こちらは動作します。詳細な分析は `docs/E2E-ACCEPTANCE.md` にあります。
 
+## イメージの検証
+
+すべての `vX.Y.Z` リリースは GitHub Actions でビルドされ、**cosign によるキーレス署名**（Sigstore）が施され、SPDX **SBOM** と **SLSA プロベナンス** の証明が添付されます。実行前に検証してください（[cosign](https://docs.sigstore.dev/cosign/installation/) が必要）:
+
+```bash
+IMAGE=neoplanetz/hermes-desktop-docker:latest
+IDENTITY='^https://github\.com/Neoplanetz/hermes-agent-desktop-docker/\.github/workflows/release\.yml@refs/tags/v'
+ISSUER=https://token.actions.githubusercontent.com
+
+cosign verify              "$IMAGE" --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+cosign verify-attestation  "$IMAGE" --type spdxjson       --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+cosign verify-attestation  "$IMAGE" --type slsaprovenance1 --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+```
+
+`cosign verify` が成功すれば署名が検証されており、2 つの `verify-attestation` は SBOM とプロベナンスがこのリポジトリのリリースワークフローで署名されたことを確認します。
+
 ## ライセンスとリンク
 
 このリポジトリ（Dockerfile、スクリプト、設定、ドキュメント）は
