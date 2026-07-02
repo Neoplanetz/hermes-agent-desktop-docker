@@ -1,0 +1,188 @@
+# Signed release pipeline. On a 'v*' tag (or manual dispatch), build amd64 + arm64
+# on NATIVE runners, merge to a multi-arch index, and — BEFORE applying the public
+# :X.Y.Z / :latest tags — run a Trivy gate, then keyless-sign (cosign, GitHub OIDC)
+# and attach an SPDX SBOM + SLSA v1.0 provenance attestation. Public tags are applied
+# LAST, so a published tag always resolves to a signed, attested digest.
+#
+# Triggers: push tag 'v*'; workflow_dispatch (version override + dry_run rehearsal)
+# Runners:  ubuntu-latest (amd64 build + release/merge), ubuntu-24.04-arm (arm64 build)
+# Secrets:  DOCKERHUB_USERNAME + DOCKERHUB_TOKEN (existing, Read/Write). No new secrets.
+name: Release (build, push, sign, attest)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to (re)release, e.g. 1.2.0 or 1.2.0-rc1 (required on dispatch)'
+        required: false
+      dry_run:
+        description: 'Build + gate only; skip signing, attestation, and public tags'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write        # keyless cosign / OIDC
+
+env:
+  IMAGE: neoplanetz/hermes-desktop-docker
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            arch: amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Log in to Docker Hub
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          provenance: false   # we attach SLSA provenance ourselves post-merge (keep per-arch push a plain manifest)
+          sbom: false
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+      - name: Export digest to a file
+        run: |
+          mkdir -p "$RUNNER_TEMP/digests"
+          echo "${{ steps.build.outputs.digest }}" > "$RUNNER_TEMP/digests/${{ matrix.arch }}"
+      - name: Upload digest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/${{ matrix.arch }}
+          retention-days: 1
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Log in to Docker Hub
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          version: v0.72.0
+      - name: Install cosign
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+      - name: Download digest artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digest-*
+          merge-multiple: true
+      - name: Resolve release metadata
+        id: meta
+        env:
+          RAW_VERSION: ${{ github.event.inputs.version || github.ref_name }}
+        run: ./scripts/release-meta.sh "$RAW_VERSION" | tee -a "$GITHUB_OUTPUT"
+      - name: Validate + assemble arch digests
+        id: digests
+        run: |
+          amd64="$(cat "$RUNNER_TEMP/digests/amd64")"
+          arm64="$(cat "$RUNNER_TEMP/digests/arm64")"
+          for d in "$amd64" "$arm64"; do
+            [[ "$d" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "bad digest: '$d'" >&2; exit 1; }
+          done
+          echo "amd64=$amd64" >> "$GITHUB_OUTPUT"
+          echo "arm64=$arm64" >> "$GITHUB_OUTPUT"
+      - name: Merge to intermediate ref, resolve index digest
+        id: merge
+        env:
+          AMD64: ${{ steps.digests.outputs.amd64 }}
+          ARM64: ${{ steps.digests.outputs.arm64 }}
+        run: |
+          short="${GITHUB_SHA:0:12}"
+          tmp="${IMAGE}:sha-${short}"
+          docker buildx imagetools create -t "$tmp" "${IMAGE}@${AMD64}" "${IMAGE}@${ARM64}"
+          D="$(docker buildx imagetools inspect "$tmp" --format '{{.Manifest.Digest}}')"
+          [[ "$D" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "bad index digest: '$D'" >&2; exit 1; }
+          echo "tmp=$tmp" >> "$GITHUB_OUTPUT"
+          echo "digest=$D" >> "$GITHUB_OUTPUT"
+      - name: Trivy gate (a fixable CRITICAL fails the release)
+        env:
+          IMG_REF: ${{ env.IMAGE }}@${{ steps.merge.outputs.digest }}
+        run: ./scripts/scan-image.sh "$IMG_REF"
+      - name: Sign the index (keyless)
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          DIGEST_REF: ${{ env.IMAGE }}@${{ steps.merge.outputs.digest }}
+        run: cosign sign --yes "$DIGEST_REF"
+      - name: Generate + attest SBOM (SPDX)
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          DIGEST_REF: ${{ env.IMAGE }}@${{ steps.merge.outputs.digest }}
+        run: |
+          trivy image --format spdx-json --output sbom.spdx.json "$DIGEST_REF"
+          cosign attest --yes --replace --type spdxjson --predicate sbom.spdx.json "$DIGEST_REF"
+      - name: Attest SLSA provenance
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          DIGEST_REF: ${{ env.IMAGE }}@${{ steps.merge.outputs.digest }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          REF: ${{ github.ref }}
+          COMMIT: ${{ github.sha }}
+          BUILDER_ID: ${{ github.server_url }}/${{ github.repository }}/.github/workflows/release.yml@${{ github.ref }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
+        run: |
+          ./scripts/release-provenance.sh > provenance.json
+          cosign attest --yes --replace --type slsaprovenance1 --predicate provenance.json "$DIGEST_REF"
+      - name: Apply public tags (last — only after signing succeeds)
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          VERSION: ${{ steps.meta.outputs.VERSION }}
+          PRERELEASE: ${{ steps.meta.outputs.PRERELEASE }}
+          DIGEST_REF: ${{ env.IMAGE }}@${{ steps.merge.outputs.digest }}
+        run: |
+          args=(-t "${IMAGE}:${VERSION}")
+          if [ "$PRERELEASE" = "false" ]; then
+            args+=(-t "${IMAGE}:latest")
+          fi
+          docker buildx imagetools create "${args[@]}" "$DIGEST_REF"
+      - name: Summary
+        if: ${{ always() }}
+        env:
+          VERSION: ${{ steps.meta.outputs.VERSION }}
+          PRERELEASE: ${{ steps.meta.outputs.PRERELEASE }}
+          DIGEST: ${{ steps.merge.outputs.digest }}
+          DRY: ${{ github.event.inputs.dry_run }}
+        run: |
+          {
+            echo "### Release $VERSION"
+            echo ""
+            echo "- dry_run: \`${DRY:-false}\`"
+            echo "- prerelease: \`$PRERELEASE\` (moves \`:latest\`: $([ "$PRERELEASE" = false ] && echo yes || echo no))"
+            echo "- index digest: \`$DIGEST\`"
+          } >> "$GITHUB_STEP_SUMMARY"
