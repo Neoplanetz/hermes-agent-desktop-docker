@@ -147,6 +147,25 @@ docker compose up -d
   안전한 경로는 정상 작동하는 **CDP를 통한 브라우저 자동화**입니다. 전체 분석은
   `docs/E2E-ACCEPTANCE.md`에 있습니다.
 
+## 이미지 검증
+
+모든 `vX.Y.Z` 릴리스는 GitHub Actions에서 빌드되어 **cosign 키리스 서명**(Sigstore)되며,
+SPDX **SBOM** 와 **SLSA provenance** 증명이 첨부됩니다. 실행 전에 검증하세요
+([cosign](https://docs.sigstore.dev/cosign/installation/) 필요):
+
+```bash
+IMAGE=neoplanetz/hermes-desktop-docker:latest
+IDENTITY='^https://github\.com/Neoplanetz/hermes-agent-desktop-docker/\.github/workflows/release\.yml@refs/tags/v'
+ISSUER=https://token.actions.githubusercontent.com
+
+cosign verify              "$IMAGE" --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+cosign verify-attestation  "$IMAGE" --type spdxjson       --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+cosign verify-attestation  "$IMAGE" --type slsaprovenance1 --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+```
+
+`cosign verify` 가 성공하면 서명이 검증된 것이고, 두 `verify-attestation` 호출은 SBOM 과
+provenance 가 이 저장소의 릴리스 워크플로로 서명되었음을 확인합니다.
+
 ## 라이선스 및 링크
 
 이 저장소(Dockerfile, 스크립트, 설정, 문서)는 **[MIT 라이선스](LICENSE)**로

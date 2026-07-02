@@ -151,6 +151,25 @@ agent's browser actions are visible no matter how you connect
   **browser automation over CDP**, which works. Full analysis in
   `docs/E2E-ACCEPTANCE.md`.
 
+## Verifying the image
+
+Every `vX.Y.Z` release is built in GitHub Actions and **keyless-signed with cosign**
+(Sigstore), with an SPDX **SBOM** and **SLSA provenance** attestation attached. Verify
+before you run it (needs [cosign](https://docs.sigstore.dev/cosign/installation/)):
+
+```bash
+IMAGE=neoplanetz/hermes-desktop-docker:latest
+IDENTITY='^https://github\.com/Neoplanetz/hermes-agent-desktop-docker/\.github/workflows/release\.yml@refs/tags/v'
+ISSUER=https://token.actions.githubusercontent.com
+
+cosign verify              "$IMAGE" --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+cosign verify-attestation  "$IMAGE" --type spdxjson       --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+cosign verify-attestation  "$IMAGE" --type slsaprovenance1 --certificate-identity-regexp "$IDENTITY" --certificate-oidc-issuer "$ISSUER"
+```
+
+A successful `cosign verify` prints the verified signature; the two `verify-attestation`
+calls confirm the SBOM and provenance were signed by this repo's release workflow.
+
 ## License & links
 
 This repository (Dockerfile, scripts, configs, docs) is licensed under the
