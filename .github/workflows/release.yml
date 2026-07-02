@@ -4,7 +4,9 @@
 # and attach an SPDX SBOM + SLSA v1.0 provenance attestation. Public tags are applied
 # LAST, so a published tag always resolves to a signed, attested digest.
 #
-# Triggers: push tag 'v*'; workflow_dispatch (version override + dry_run rehearsal)
+# Triggers: push tag 'v*'; workflow_dispatch (rehearsal / re-release). A REAL release
+#           (signing + public tags) requires a 'v*' TAG ref — push the tag, or dispatch
+#           with --ref <the v-tag>. A branch dispatch only builds + runs the Trivy gate.
 # Runners:  ubuntu-latest (amd64 build + release/merge), ubuntu-24.04-arm (arm64 build)
 # Secrets:  DOCKERHUB_USERNAME + DOCKERHUB_TOKEN (existing, Read/Write). No new secrets.
 name: Release (build, push, sign, attest)
@@ -16,10 +18,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to (re)release, e.g. 1.2.0 or 1.2.0-rc1 (required on dispatch)'
+        description: 'Version to (re)release, e.g. 1.2.0 or 1.2.0-rc1. A REAL release requires a v* tag ref (tag push, or dispatch with --ref <the v-tag>); a branch dispatch builds + gates only, applying no public tags.'
         required: false
       dry_run:
-        description: 'Build + gate only; skip signing, attestation, and public tags'
+        description: 'Build + gate only; skip signing, attestation, and public tags. (Per-arch digests and the intermediate :sha ref are still pushed.)'
         type: boolean
         default: false
 
@@ -67,9 +69,12 @@ jobs:
           sbom: false
           outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
       - name: Export digest to a file
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+          ARCH: ${{ matrix.arch }}
         run: |
           mkdir -p "$RUNNER_TEMP/digests"
-          echo "${{ steps.build.outputs.digest }}" > "$RUNNER_TEMP/digests/${{ matrix.arch }}"
+          printf '%s' "$DIGEST" > "$RUNNER_TEMP/digests/$ARCH"
       - name: Upload digest artifact
         uses: actions/upload-artifact@v4
         with:
@@ -136,19 +141,19 @@ jobs:
           IMG_REF: ${{ env.IMAGE }}@${{ steps.merge.outputs.digest }}
         run: ./scripts/scan-image.sh "$IMG_REF"
       - name: Sign the index (keyless)
-        if: ${{ github.event.inputs.dry_run != 'true' }}
+        if: ${{ github.event.inputs.dry_run != 'true' && startsWith(github.ref, 'refs/tags/') }}
         env:
           DIGEST_REF: ${{ env.IMAGE }}@${{ steps.merge.outputs.digest }}
         run: cosign sign --yes "$DIGEST_REF"
       - name: Generate + attest SBOM (SPDX)
-        if: ${{ github.event.inputs.dry_run != 'true' }}
+        if: ${{ github.event.inputs.dry_run != 'true' && startsWith(github.ref, 'refs/tags/') }}
         env:
           DIGEST_REF: ${{ env.IMAGE }}@${{ steps.merge.outputs.digest }}
         run: |
           trivy image --format spdx-json --output sbom.spdx.json "$DIGEST_REF"
           cosign attest --yes --replace --type spdxjson --predicate sbom.spdx.json "$DIGEST_REF"
       - name: Attest SLSA provenance
-        if: ${{ github.event.inputs.dry_run != 'true' }}
+        if: ${{ github.event.inputs.dry_run != 'true' && startsWith(github.ref, 'refs/tags/') }}
         env:
           DIGEST_REF: ${{ env.IMAGE }}@${{ steps.merge.outputs.digest }}
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}
@@ -160,7 +165,7 @@ jobs:
           ./scripts/release-provenance.sh > provenance.json
           cosign attest --yes --replace --type slsaprovenance1 --predicate provenance.json "$DIGEST_REF"
       - name: Apply public tags (last — only after signing succeeds)
-        if: ${{ github.event.inputs.dry_run != 'true' }}
+        if: ${{ github.event.inputs.dry_run != 'true' && startsWith(github.ref, 'refs/tags/') }}
         env:
           VERSION: ${{ steps.meta.outputs.VERSION }}
           PRERELEASE: ${{ steps.meta.outputs.PRERELEASE }}
@@ -171,6 +176,18 @@ jobs:
             args+=(-t "${IMAGE}:latest")
           fi
           docker buildx imagetools create "${args[@]}" "$DIGEST_REF"
+      - name: Verify public tags resolve to the signed digest
+        if: ${{ github.event.inputs.dry_run != 'true' && startsWith(github.ref, 'refs/tags/') }}
+        env:
+          VERSION: ${{ steps.meta.outputs.VERSION }}
+          SIGNED_DIGEST: ${{ steps.merge.outputs.digest }}
+        run: |
+          got="$(docker buildx imagetools inspect "${IMAGE}:${VERSION}" --format '{{.Manifest.Digest}}')"
+          if [ "$got" != "$SIGNED_DIGEST" ]; then
+            echo "::error::${IMAGE}:${VERSION} resolves to ${got} but the SIGNED index digest is ${SIGNED_DIGEST} — consumer cosign verify would FAIL. The retag did not preserve the digest; switch Apply-public-tags to a digest-preserving copy (crane tag / regctl image copy)." >&2
+            exit 1
+          fi
+          echo "OK: ${IMAGE}:${VERSION} -> ${SIGNED_DIGEST} (signed)"
       - name: Summary
         if: ${{ always() }}
         env:

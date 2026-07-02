@@ -155,5 +155,5 @@ which works because XTEST is present on Xvnc) — narrower (GUI editors only), n
 ## Signed release pipeline (release.yml)
 
 - [ ] **dry_run** — `gh workflow run "Release (build, push, sign, attest)" --ref <branch> -f version=1.1.1-rc1 -f dry_run=true` → builds both arches, merges, Trivy gate passes; **no signing, no public tag**.
-- [ ] **pre-release** — push `v1.1.1-rc1` → run green; `cosign verify` + `verify-attestation --type spdxjson` + `--type slsaprovenance1` all succeed; `:1.1.1-rc1` exists and **`:latest` is unchanged**.
+- [ ] **pre-release** — push `v1.1.1-rc1` → run green, and the in-workflow **"Verify public tags resolve to the signed digest"** step passes (the `imagetools create` retag preserved the signed index digest). `cosign verify` + `verify-attestation --type spdxjson` + `--type slsaprovenance1` all succeed against `:1.1.1-rc1`; `:1.1.1-rc1` exists and **`:latest` is unchanged**. (If that verify step ever fails, the retag didn't preserve the digest — switch "Apply public tags" to a digest-preserving copy: `crane tag` / `regctl image copy`.)
 - [ ] **release** — push `v1.1.1` → `:1.1.1` and `:latest` resolve to the **same signed** digest; all three cosign checks pass.
