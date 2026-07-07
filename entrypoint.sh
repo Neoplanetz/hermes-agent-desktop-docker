@@ -62,21 +62,32 @@ fi'
 # ── Desktop shortcuts — place + trust (only the known Hermes launchers; injection-safe) ──
 DESKTOP_DIR="/home/$USER/Desktop"
 mkdir -p "$DESKTOP_DIR"
+TRUST_ARGS=()
 for s in hermes-terminal.desktop hermes-setup.desktop hermes-dashboard.desktop; do
   f="$DESKTOP_DIR/$s"
   [ -f "$f" ] || cp "/opt/hermes-defaults/Desktop/$s" "$f" 2>/dev/null || true
   [ -f "$f" ] || continue
   chmod +x "$f"
-  # XFCE 4.18 (Ubuntu 24.04) trusts a launcher only when it is executable AND has
-  # metadata::xfce-exe-checksum == sha256(file contents) — exactly what the dialog's
-  # "Mark Executable" button writes. metadata::trusted (old GNOME/Nautilus convention)
-  # is IGNORED by XFCE, so setting only it left the "Untrusted application launcher"
-  # dialog on EVERY icon launch. Set both inside one dbus session so gvfsd-metadata
-  # persists them; path + checksum pass as positional args ($1/$2), never interpolated.
-  sum="$(sha256sum "$f" | cut -d' ' -f1)"
-  su - "$USER" -c 'dbus-launch sh -c '\''gio set "$1" metadata::trusted true; gio set "$1" metadata::xfce-exe-checksum "$2"'\'' _ "$1" "$2"' _ "$f" "$sum" 2>/dev/null || true
+  TRUST_ARGS+=("$f" "$(sha256sum "$f" | cut -d' ' -f1)")
 done
 chown -R "$USER:$USER" "$DESKTOP_DIR"
+# XFCE 4.18 (Ubuntu 24.04) trusts a launcher only when it is executable AND has
+# metadata::xfce-exe-checksum == sha256(file contents) — exactly what the dialog's
+# "Mark Executable" button writes. metadata::trusted (old GNOME/Nautilus convention)
+# is IGNORED by XFCE, so setting only it left the "Untrusted application launcher"
+# dialog on EVERY icon launch.
+# ALL writes go through ONE bus (one gvfsd-metadata). One dbus-launch PER FILE
+# spawned concurrent gvfsd-metadata daemons on the same ~/.local/share/gvfs-metadata
+# tree; the DB is single-writer, so daemons rotated the journal out from under each
+# other and writes were LOST at random (observed: a launcher's checksum landing in an
+# already-deleted journal → the untrusted dialog was back for that icon).
+# dbus-run-session (not dbus-launch) tears the bus down when the command exits, and
+# gvfsd-metadata exits with its bus — so no metadata daemon lingers into the XFCE
+# session to race it later. gio set returns only after the journal append, so the
+# teardown is durable. Paths + checksums pass as positional args, never interpolated.
+if [ ${#TRUST_ARGS[@]} -gt 0 ]; then
+  su - "$USER" -c 'dbus-run-session -- sh -c '\''while [ "$#" -ge 2 ]; do gio set "$1" metadata::trusted true; gio set "$1" metadata::xfce-exe-checksum "$2"; shift 2; done'\'' _ "$@"' _ "${TRUST_ARGS[@]}" 2>/dev/null || true
+fi
 
 # VNC password
 mkdir -p /home/$USER/.vnc
