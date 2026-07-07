@@ -5,6 +5,7 @@ USER="${HERMES_USER:-hermes}"
 PASSWORD="${HERMES_PASSWORD:-hermes123}"
 VNC_RESOLUTION="${VNC_RESOLUTION:-1920x1080}"
 VNC_COL_DEPTH="${VNC_COL_DEPTH:-24}"
+HERMES_CDP_BROWSER="${HERMES_CDP_BROWSER:-true}"
 
 # ── Input validation (USER/PASSWORD are interpolated into su/chpasswd) ──
 if ! [[ "$USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]]; then
@@ -184,12 +185,21 @@ chown -R "$USER:$USER" "/home/$USER/.hermes"
 # Backgrounded and NOT supervised — if it dies the desktop stays up, and relaunch
 # is idempotent (same profile dir → reuses the running instance, no port rebind).
 # --remote-allow-origins=* is required for the CDP websocket handshake on Chrome 136+, and is safe because CDP is bound to loopback (--remote-debugging-address=127.0.0.1) — only local clients can reach it.
-CDP_PROFILE="/home/$USER/.config/google-chrome-cdp"
-su - "$USER" -c "mkdir -p '$CDP_PROFILE' && rm -f '$CDP_PROFILE'/Singleton* && DISPLAY=:1 setsid google-chrome-stable \
-  --remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 --remote-allow-origins=* \
-  --user-data-dir='$CDP_PROFILE' --no-first-run --no-default-browser-check \
-  about:blank >/dev/null 2>&1 &" || true
-echo "Visible CDP browser launching on :1 (CDP endpoint 127.0.0.1:9222)"
+# HERMES_CDP_BROWSER=false|0|no|off skips the launch for users who want a clean
+# desktop at boot — /browser then has no endpoint until a CDP Chrome is started.
+case "$HERMES_CDP_BROWSER" in
+  [Ff][Aa][Ll][Ss][Ee]|0|[Nn][Oo]|[Oo][Ff][Ff])
+    echo "CDP browser disabled (HERMES_CDP_BROWSER=$HERMES_CDP_BROWSER) — Hermes /browser has no endpoint until a CDP Chrome is started"
+    ;;
+  *)
+    CDP_PROFILE="/home/$USER/.config/google-chrome-cdp"
+    su - "$USER" -c "mkdir -p '$CDP_PROFILE' && rm -f '$CDP_PROFILE'/Singleton* && DISPLAY=:1 setsid google-chrome-stable \
+      --remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 --remote-allow-origins=* \
+      --user-data-dir='$CDP_PROFILE' --no-first-run --no-default-browser-check \
+      about:blank >/dev/null 2>&1 &" || true
+    echo "Visible CDP browser launching on :1 (CDP endpoint 127.0.0.1:9222)"
+    ;;
+esac
 
 # ── Hermes web dashboard (9119, basic-auth = desktop credentials) ──
 # Bind 0.0.0.0 so Docker's 127.0.0.1:9119:9119 host-map reaches it; a non-loopback

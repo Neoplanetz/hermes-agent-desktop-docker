@@ -6,6 +6,7 @@ services:
     environment:
       - HERMES_USER=${HERMES_USER:-hermes}
       - HERMES_PASSWORD=${HERMES_PASSWORD:-hermes123}
+      - HERMES_CDP_BROWSER=${HERMES_CDP_BROWSER:-true}
     ports:
       - "127.0.0.1:6080:6080"
       - "127.0.0.1:5901:5901"

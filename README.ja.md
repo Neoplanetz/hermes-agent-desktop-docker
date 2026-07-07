@@ -120,6 +120,7 @@ scripts/verify-all.sh
 ## 設定
 
 - `HERMES_USER` / `HERMES_PASSWORD` — デスクトップアカウント。VNC/RDP とダッシュボードのログインに使用します。`.env` で設定します。
+- `HERMES_CDP_BROWSER` — `false` に設定すると、起動時に画面に表示される CDP Chrome を起動しません（デフォルト `true`）。Hermes の `/browser` はこのブラウザに接続するため、CDP ブラウザが起動されるまで動作しません。
 - モデル/プロバイダーはデフォルトで未設定です — 実行時にダッシュボードで設定します。
 
 ## データ永続化

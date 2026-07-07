@@ -144,6 +144,9 @@ agent's browser actions are visible no matter how you connect
 
 - `HERMES_USER` / `HERMES_PASSWORD` — desktop account, used for VNC/RDP and the
   dashboard login. Set in `.env`.
+- `HERMES_CDP_BROWSER` — set to `false` to skip launching the visible CDP Chrome
+  at boot (default `true`). Hermes `/browser` attaches to that browser, so it
+  won't work until a CDP browser is started.
 - Model/provider are unset by default — configure at runtime in the dashboard.
 
 ## Data persistence

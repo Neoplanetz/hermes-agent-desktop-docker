@@ -136,6 +136,7 @@ Full instructions (SBOM + provenance): see "Verifying the image" in the repo REA
 | `image` | `neoplanetz/hermes-desktop-docker:latest` | Published **multi-arch** image (`linux/amd64` + `linux/arm64`); Docker pulls the variant matching your CPU automatically. Pin a version (`:1.1.0`) for reproducibility. |
 | `environment` · `HERMES_USER` | `hermes` | The single desktop account — also the **RDP and dashboard username**. |
 | `environment` · `HERMES_PASSWORD` | `hermes123` | Password for **VNC, RDP, and dashboard** login. **Change this before exposing any port beyond loopback.** |
+| `environment` · `HERMES_CDP_BROWSER` | `true` | Optional. `false` skips launching the visible CDP Chrome at boot — Hermes `/browser` then has no endpoint until a CDP browser is started, so leave `true` unless you want a clean desktop. |
 | `ports` · `6080` | `127.0.0.1:6080:6080` | NoVNC web desktop (`/vnc.html`). Published to **loopback only**. |
 | `ports` · `5901` | `127.0.0.1:5901:5901` | Raw VNC for a native client. |
 | `ports` · `3390→3389` | `127.0.0.1:3390:3389` | RDP. `xrdp` listens on **3389 inside** the container; published on host **3390** to avoid clashing with a local RDP service (e.g. gnome-remote-desktop). Connect clients to `localhost:3390`. |

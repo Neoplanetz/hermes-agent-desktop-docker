@@ -139,6 +139,8 @@ scripts/verify-all.sh
 
 - `HERMES_USER` / `HERMES_PASSWORD` —— 桌面账户，用于 VNC/RDP 和仪表盘登录。在 `.env`
   中设置。
+- `HERMES_CDP_BROWSER` —— 设为 `false` 时，启动阶段不再打开屏幕上可见的 CDP Chrome
+  （默认 `true`）。Hermes `/browser` 依赖该浏览器，在 CDP 浏览器启动之前无法工作。
 - 模型/提供商默认未设置 —— 在仪表盘中于运行时配置。
 
 ## 数据持久化

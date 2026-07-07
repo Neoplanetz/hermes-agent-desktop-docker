@@ -140,6 +140,9 @@ scripts/verify-all.sh
 
 - `HERMES_USER` / `HERMES_PASSWORD` — 데스크톱 계정으로, VNC/RDP 및 대시보드 로그인에
   사용됩니다. `.env`에서 설정합니다.
+- `HERMES_CDP_BROWSER` — `false`로 설정하면 부팅 시 화면에 보이는 CDP 크롬을 띄우지
+  않습니다(기본값 `true`). Hermes `/browser`는 이 브라우저에 연결하므로, CDP 브라우저가
+  실행되기 전까지는 동작하지 않습니다.
 - 모델/공급자는 기본적으로 설정되어 있지 않습니다 — 런타임에 대시보드에서 구성하세요.
 
 ## 데이터 영속성
