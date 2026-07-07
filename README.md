@@ -92,6 +92,30 @@ Then open the **dashboard** at <http://localhost:9119> and set a model + API key
 > [Docker Hub overview](DOCKERHUB_OVERVIEW.md) for a ready-to-use `compose.yaml`
 > and a full parameter table.
 
+## Building from source
+
+`docker-compose.yml` already carries a `build:` stanza pointing at this repo's
+`Dockerfile`, so a from-source build is a single command:
+
+```bash
+docker compose up -d --build    # force a rebuild after local changes
+```
+
+To rebuild **and** run the full verification suite (all `verify-*` gates) in
+one go — ⚠️ destructive: it finishes with `docker compose down -v`, wiping the
+`hermes-home` volume:
+
+```bash
+scripts/verify-all.sh
+```
+
+Local builds target your machine's architecture only. Publishing multi-arch
+images to Docker Hub is deliberately **not** a manual step: it happens
+exclusively through the signed release pipeline
+(`git tag vX.Y.Z && git push origin vX.Y.Z` → `release.yml`), so every public
+tag stays cosign-verifiable — see
+[Verifying the image](#verifying-the-image).
+
 ## Access
 
 | Surface | Address | Login |

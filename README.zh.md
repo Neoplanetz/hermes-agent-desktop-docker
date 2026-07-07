@@ -91,6 +91,28 @@ docker compose up -d
 > [Docker Hub 概览](DOCKERHUB_OVERVIEW.md)，其中提供了开箱即用的 `compose.yaml`
 > 和完整的参数表。
 
+## 从源码构建
+
+`docker-compose.yml` 中已包含指向本仓库 `Dockerfile` 的 `build:` 配置，因此从源码
+构建只需一条命令：
+
+```bash
+docker compose up -d --build    # 本地修改后强制重新构建
+```
+
+若要在重新构建的**同时**一并运行完整的验证套件（所有 `verify-*` 门禁）——
+⚠️ 破坏性操作：最后会执行 `docker compose down -v` 拆除整个栈，并清空
+`hermes-home` 卷：
+
+```bash
+scripts/verify-all.sh
+```
+
+本地构建仅面向当前机器的架构。向 Docker Hub 发布多架构镜像有意**不设**手动步骤：
+发布只能通过签名发布流水线（`git tag vX.Y.Z && git push origin vX.Y.Z` →
+`release.yml`）完成，因此所有公开标签始终可用 cosign 验证——参见
+[验证镜像](#验证镜像)。
+
 ## 访问方式
 
 | 接入方式 | 地址 | 登录 |

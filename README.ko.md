@@ -91,6 +91,29 @@ docker compose up -d
 > `neoplanetz/hermes-desktop-docker:latest`를 받으세요 — 바로 사용할 수 있는 `compose.yaml`과
 > 전체 매개변수 표는 [Docker Hub 개요](DOCKERHUB_OVERVIEW.md)를 참조하세요.
 
+## 소스에서 빌드하기
+
+`docker-compose.yml`에 이 저장소의 `Dockerfile`을 가리키는 `build:` 항목이 이미
+들어 있으므로, 소스 빌드는 명령 한 줄이면 됩니다:
+
+```bash
+docker compose up -d --build    # 로컬 변경 후 강제 재빌드
+```
+
+재빌드와 **함께** 전체 검증 스위트(모든 `verify-*` 게이트)를 한 번에 돌리려면 —
+⚠️ 파괴적: 마지막에 `docker compose down -v`로 스택을 내리면서 `hermes-home`
+볼륨을 삭제합니다:
+
+```bash
+scripts/verify-all.sh
+```
+
+로컬 빌드는 현재 머신의 아키텍처만 대상으로 합니다. Docker Hub로의 멀티 아키텍처
+이미지 게시는 의도적으로 수동 절차가 **아닙니다**: 게시는 서명 릴리스 파이프라인
+(`git tag vX.Y.Z && git push origin vX.Y.Z` → `release.yml`)을 통해서만
+이루어지며, 덕분에 모든 공개 태그는 cosign으로 검증할 수 있습니다 —
+[이미지 검증](#이미지-검증)을 참조하세요.
+
 ## 접속
 
 | 접속 방식 | 주소 | 로그인 |

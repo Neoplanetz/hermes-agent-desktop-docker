@@ -84,6 +84,22 @@ docker compose up -d
 
 > ソースからビルドする代わりに公開イメージを使いたい場合は、`neoplanetz/hermes-desktop-docker:latest` をプルしてください。すぐに使える `compose.yaml` と完全なパラメータ表については [Docker Hub 概要](DOCKERHUB_OVERVIEW.md) を参照してください。
 
+## ソースからのビルド
+
+`docker-compose.yml` にはこのリポジトリの `Dockerfile` を指す `build:` 設定がすでに含まれているため、ソースビルドはコマンド 1 行で済みます:
+
+```bash
+docker compose up -d --build    # ローカル変更後に強制リビルド
+```
+
+リビルドと**あわせて**検証スイート全体（すべての `verify-*` ゲート）を一度に実行するには — ⚠️ 破壊的: 最後に `docker compose down -v` でスタックを破棄し、`hermes-home` ボリュームが消去されます:
+
+```bash
+scripts/verify-all.sh
+```
+
+ローカルビルドは実行マシンのアーキテクチャのみを対象とします。Docker Hub へのマルチアーキテクチャイメージの公開は、意図的に手動手順に**していません**。公開は署名付きリリースパイプライン（`git tag vX.Y.Z && git push origin vX.Y.Z` → `release.yml`）経由でのみ行われるため、すべての公開タグは cosign で検証可能なままです — [イメージの検証](#イメージの検証)を参照してください。
+
 ## アクセス
 
 | 接続方法 | アドレス | ログイン |
