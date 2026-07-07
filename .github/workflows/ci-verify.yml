@@ -59,7 +59,7 @@ jobs:
       - name: Upload Trivy SARIF to code scanning
         if: always() && steps.img.outputs.built == 'true'
         continue-on-error: true   # fork/Dependabot PRs are read-only; push->main is authoritative
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy.sarif
 
